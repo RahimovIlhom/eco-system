@@ -19,4 +19,5 @@ def get_location_details(latitude, longitude):
         'amenity': address.get('amenity', 'N/A'),
         'shop': address.get('shop', 'N/A'),
         'man_made': address.get('man_made', 'N/A'),
+        'postcode': address.get('postcode', 'N/A'),
     }

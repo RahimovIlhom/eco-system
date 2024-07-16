@@ -39,6 +39,8 @@ INSTALLED_APPS = [
     'accounts.apps.AccountsConfig',
     'users.apps.UsersConfig',
     'eco_app.apps.EcoAppConfig',
+    'game_app.apps.GameAppConfig',
+    'address_app.apps.AddressAppConfig',
 ]
 
 MIDDLEWARE = [

@@ -7,8 +7,7 @@ employee_model = get_user_model()
 class EcoBranch(models.Model):
     employee = models.ForeignKey(employee_model, on_delete=models.SET_NULL, null=True, blank=True)
     name = models.CharField(max_length=255, null=True, blank=True)
-    region = models.CharField(max_length=255, null=True, blank=True)
-    city = models.CharField(max_length=255, null=True, blank=True)
+
 
     class Meta:
         db_table = 'eco_branches'

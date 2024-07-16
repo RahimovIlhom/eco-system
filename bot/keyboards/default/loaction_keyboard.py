@@ -9,4 +9,4 @@ async def location_markup(lang: str = 'uz') -> ReplyKeyboardMarkup:
         request_location=True
     )
     keyboard.add(location_button)
-    return keyboard.as_markup(resize_keyboard=True, one_time_keyboard=True)
+    return keyboard.as_markup(resize_keyboard=True)
