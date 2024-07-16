@@ -3,7 +3,7 @@ from aiogram import types
 from loader import dp
 from keyboards.default import location_markup
 from filters import ChatTypeFilter
-from utils.misc.get_location import get_location_details
+from utils import get_location_details
 
 
 @dp.message(ChatTypeFilter('private'), lambda message: message.text == 'hello')
