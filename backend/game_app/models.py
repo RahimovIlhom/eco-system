@@ -27,3 +27,19 @@ class Game(models.Model):
 
     class Meta:
         db_table = 'games'
+
+
+class QRCode(models.Model):
+    game = models.ForeignKey(Game, on_delete=models.CASCADE)
+    eco_branch = models.ForeignKey('eco_app.EcoBranch', on_delete=models.SET_NULL, null=True, blank=True)
+    code = models.CharField(max_length=255, unique=True)
+    is_active = models.BooleanField(default=True)
+    activity_time = models.PositiveIntegerField(default=5)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.code
+
+    class Meta:
+        db_table = 'qrcodes'
