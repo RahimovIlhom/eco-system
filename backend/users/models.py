@@ -10,6 +10,17 @@ LANGUAGES = (
 )
 
 
+class Admin(models.Model):
+    tg_id = models.CharField(max_length=255, primary_key=True, unique=True)
+    language = models.CharField(max_length=2, choices=LANGUAGES, default='uz')
+
+    def __str__(self):
+        return self.tg_id
+
+    class Meta:
+        db_table = 'admins'
+
+
 class EcoBranchEmployee(models.Model):
     tg_id = models.CharField(max_length=255, primary_key=True, unique=True)
     language = models.CharField(max_length=2, choices=LANGUAGES, default='uz')

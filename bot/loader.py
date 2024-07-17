@@ -14,3 +14,7 @@ db = Database()
 
 async def create_db():
     await db.create()
+
+
+async def close_db():
+    await db.close()
