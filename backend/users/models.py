@@ -4,9 +4,15 @@ from django.db import models
 
 employee_model = get_user_model()
 
+LANGUAGES = (
+    ('uz', 'Uzbek'),
+    ('ru', 'Russian'),
+)
+
 
 class EcoBranchEmployee(models.Model):
     tg_id = models.CharField(max_length=255, primary_key=True, unique=True)
+    language = models.CharField(max_length=2, choices=LANGUAGES, default='uz')
     employee = models.OneToOneField(employee_model, on_delete=models.SET_NULL, null=True, blank=True)
     eco_branch = models.ForeignKey('eco_app.EcoBranch', on_delete=models.SET_NULL, null=True, blank=True)
     fullname = models.CharField(max_length=255)
@@ -24,6 +30,7 @@ class EcoBranchEmployee(models.Model):
 
 class Participant(models.Model):
     tg_id = models.CharField(max_length=255, primary_key=True, unique=True)
+    language = models.CharField(max_length=2, choices=LANGUAGES, default='uz')
     fullname = models.CharField(max_length=255)
     phone = models.CharField(max_length=25)
     address = models.ForeignKey('address_app.Address', on_delete=models.SET_NULL, null=True, blank=True)
