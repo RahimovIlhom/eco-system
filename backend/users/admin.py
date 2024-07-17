@@ -11,7 +11,7 @@ class EcoBranchEmployeeAdmin(admin.ModelAdmin):
 
 @admin.register(Participant)
 class ParticipantAdmin(admin.ModelAdmin):
-    list_display = ['tg_id', 'fullname', 'phone', 'address', 'location', ]
+    list_display = ['tg_id', 'fullname', 'phone', 'created_at', 'updated_at']
 
 
 @admin.register(RegisteredQRCode)
