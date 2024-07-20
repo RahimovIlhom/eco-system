@@ -148,6 +148,31 @@ class Database:
         """
         await self.execute(sql, (game_name, None, None, None, 'pending', datetime.now(), datetime.now()))
 
+    async def get_active_games(self):
+        sql = """
+        SELECT id, name, description, start_date, end_date, status, created_at, updated_at
+        FROM games
+        WHERE status = 'active'
+        """
+        return await self.execute(sql, fetchall=True)
+
+    async def add_qr_code(self, game_id, eco_branch_id, code):
+        sql = """
+        INSERT INTO qrcodes
+        (game_id, eco_branch_id, code, is_active, activity_time, created_at, updated_at)
+        VALUES
+        (%s, %s, %s, %s, %s, %s, %s)
+        """
+        await self.execute(sql, (game_id, eco_branch_id, code, True, 10, datetime.now(), datetime.now()))
+
+    async def check_qr_code(self, code):
+        sql = """
+        SELECT id, game_id, eco_branch_id, code, is_active, activity_time, created_at, updated_at
+        FROM qrcodes
+        WHERE code = %s
+        """
+        return await self.execute(sql, (code,), fetchone=True)
+
 
 
 

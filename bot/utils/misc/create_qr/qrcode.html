@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chiroyli QR Kod</title>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.4.4/build/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qr-artist@1.1.1/dist/qr-artist.min.js"></script>
+    <style>
+        #qrcode {
+            width: 300px;
+            height: 300px;
+            margin: auto;
+        }
+    </style>
+</head>
+<body>
+    <div id="qrcode"></div>
+    <script>
+        const qrcodeContainer = document.getElementById('qrcode');
+
+        const qrOptions = {
+            size: 300,
+            value: 'https://qrplanet.com',
+            image: {
+                src: 'https://example.com/logo.png', // Bu yerdagi logoning URL manzilini o'zingizga mos ravishda o'zgartiring
+                width: 60,
+                height: 60
+            },
+            dotsOptions: {
+                type: 'dots',
+                color: '#000000'
+            },
+            backgroundOptions: {
+                color: '#ffffff',
+            }
+        };
+
+        new QRArtist(qrOptions).append(qrcodeContainer);
+    </script>
+</body>
+</html>
