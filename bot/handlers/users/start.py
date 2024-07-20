@@ -5,12 +5,13 @@ from aiogram.fsm.state import State
 from aiogram.types import Message
 
 from loader import dp, db
-from keyboards.default import language_markup, admin_menu
+from keyboards.default import language_markup, admin_menu, employee_menu
 from filters import ChatTypeFilter, AdminFilter, EmployeeFilter
 
 
 @dp.message(ChatTypeFilter('private'), CommandStart(), AdminFilter())
 async def admin_start(message: types.Message, state: FSMContext):
+    await state.clear()
     admin_lang = await db.admin_get_language(message.from_user.id)
     if not admin_lang:
         await message.answer(f"Iltimos, tilni tanlang / Пожалуйста, выберите язык.",
@@ -21,7 +22,18 @@ async def admin_start(message: types.Message, state: FSMContext):
             'uz': "Admin panel",
             'ru': "Панель администратора",
         }
-        await message.answer(TEXTS[admin_lang[0]], reply_markup=await admin_menu(admin_lang[0]))
+        await message.answer(TEXTS[admin_lang['language']], reply_markup=await admin_menu(admin_lang['language']))
+
+
+@dp.message(ChatTypeFilter('private'), CommandStart(), EmployeeFilter())
+async def employee_start(message: types.Message):
+    employee = await db.get_employee(message.from_user.id)
+    lang = employee['language']
+    TEXTS = {
+        'uz': "Bosh menu",
+        'ru': "Главное меню",
+    }
+    await message.answer(TEXTS[lang], reply_markup=await employee_menu(lang))
 
 
 @dp.message(ChatTypeFilter('private'), CommandStart())

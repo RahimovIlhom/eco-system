@@ -5,8 +5,8 @@ from .models import EcoBranchEmployee, Participant, RegisteredQRCode, Winner
 
 @admin.register(EcoBranchEmployee)
 class EcoBranchEmployeeAdmin(admin.ModelAdmin):
-    list_display = ['tg_id', 'employee', 'eco_branch', 'fullname', 'phone', 'inn', ]
-    list_filter = ['employee', 'eco_branch']
+    list_display = ['tg_id', 'eco_branch', 'fullname', 'phone', 'inn', ]
+    list_filter = ['eco_branch']
 
 
 @admin.register(Participant)

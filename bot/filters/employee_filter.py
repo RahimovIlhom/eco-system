@@ -8,7 +8,7 @@ from loader import db
 
 async def get_employees_ids():
     employees = await db.get_employees()
-    employees_ids = [employee[0] for employee in employees]
+    employees_ids = [employee['tg_id'] for employee in employees]
     return employees_ids
 
 

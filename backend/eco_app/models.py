@@ -12,7 +12,7 @@ WORKING_DAYS = (
 
 
 class EcoBranch(models.Model):
-    employee = models.ForeignKey(employee_model, on_delete=models.SET_NULL, null=True, blank=True)
+    name = models.CharField(max_length=255, null=True, blank=True)
     address = models.ForeignKey('address_app.Address', on_delete=models.SET_NULL, null=True, blank=True)
     location = models.ForeignKey('address_app.Location', on_delete=models.SET_NULL, null=True, blank=True)
     start_time = models.TimeField(null=True, blank=True)
