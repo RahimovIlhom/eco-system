@@ -34,3 +34,19 @@ async def employees_menu(lang: str = 'uz') -> ReplyKeyboardMarkup:
         resize_keyboard=True
     )
     return keyboard
+
+
+async def eco_branches_menu(lang: str = 'uz') -> ReplyKeyboardMarkup:
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text="🏢 Punktlar" if lang == 'uz' else "🏢 Пункты"),
+                KeyboardButton(text="➕ Punkt qo'shish" if lang == 'uz' else "➕ Добавить пункт"),
+            ],
+            [
+                KeyboardButton(text="🔙 Orqaga" if lang == 'uz' else "🔙 Назад")
+            ]
+        ],
+        resize_keyboard=True
+    )
+    return keyboard

@@ -3,7 +3,7 @@ from geopy.geocoders import Nominatim
 geolocator = Nominatim(user_agent="EcoSystemBot")
 
 
-def get_location_details(latitude, longitude):
+async def get_location_details(latitude, longitude):
     location = geolocator.reverse((latitude, longitude), exactly_one=True, language='uz')
     address = location.raw['address']
 
