@@ -46,7 +46,7 @@ async def bot_start(message: Message):
 # ------------ admin set language ----------------------------------------------------------------------------------
 
 
-@dp.message(State('admin_lang'), lambda msg: msg.text in ['🇺🇿 O\'zbek tili', '🇷🇺 Русский язык'], AdminFilter())
+@dp.message(State('admin_lang'), AdminFilter(), lambda msg: msg.text in ['🇺🇿 O\'zbek tili', '🇷🇺 Русский язык'])
 async def set_admin_language(msg: Message, state: FSMContext):
     lang = 'uz' if msg.text == "🇺🇿 O\'zbek tili" else 'ru'
     await db.admin_set_language(msg.from_user.id, lang)
@@ -64,6 +64,29 @@ async def answer_choose_language(msg: Message, state: FSMContext):
     await state.set_state(State('admin_lang'))
 
 # ------------ admin set language end -----------------------------------------------------------------------------
+
+
+# ------------ employee set language ------------------------------------------------------------------------------
+
+
+@dp.message(State('employee_lang'), EmployeeFilter(), lambda msg: msg.text in ['🇺🇿 O\'zbek tili', '🇷🇺 Русский язык'])
+async def set_employee_language(msg: Message, state: FSMContext):
+    lang = 'uz' if msg.text == "🇺🇿 O\'zbek tili" else 'ru'
+    await db.employee_set_language(msg.from_user.id, lang)
+    TEXTS = {
+        'uz': "Bosh menu",
+        'ru': "Главное меню",
+    }
+    await msg.answer(TEXTS[lang], reply_markup=await employee_menu(lang))
+    await state.clear()
+
+
+@dp.message(State(None), EmployeeFilter(), lambda msg: msg.text in ['🌐 Tilni o\'zgartirish', '🌐 Изменить язык'])
+async def answer_choose_language(msg: Message, state: FSMContext):
+    await msg.answer("Tilni tanlang / Выберите язык", reply_markup=await language_markup())
+    await state.set_state(State('employee_lang'))
+
+# ------------ employee set language end --------------------------------------------------------------------------
 
 
 

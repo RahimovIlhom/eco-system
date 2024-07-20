@@ -43,7 +43,7 @@ class Database:
                     return tuple(dict(row) for row in result) if result else ()
 
     async def get_employees(self) -> tuple:
-        sql = "SELECT tg_id, language, eco_branch, fullname, phone, inn, created_at FROM eco_branch_employees"
+        sql = "SELECT tg_id, language, eco_branch_id, fullname, phone, inn, created_at FROM eco_branch_employees"
         return await self.execute(sql, fetchall=True)
 
     async def get_employee(self, tg_id) -> dict:
@@ -58,6 +58,10 @@ class Database:
                "(%s, %s, %s, %s, %s, %s, %s, %s)")
         await self.execute(sql, (tg_id, 'uz', eco_branch_id, fullname, phone,
                                  datetime.now(), datetime.now(), None))
+
+    async def employee_set_language(self, tg_id, language: str) -> None:
+        sql = "UPDATE eco_branch_employees SET language = %s WHERE tg_id = %s"
+        await self.execute(sql, (language, tg_id))
 
     async def admin_get_language(self, tg_id) -> dict:
         sql = "SELECT language FROM admins WHERE tg_id = %s"

@@ -14,4 +14,4 @@ async def get_employees_ids():
 
 class EmployeeFilter(BaseFilter):
     async def __call__(self, message: Union[Message, CallbackQuery]) -> bool:
-        return message.from_user.id in await get_employees_ids()
+        return str(message.from_user.id) in await get_employees_ids()
