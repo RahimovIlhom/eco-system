@@ -8,9 +8,9 @@ from aiogram.types import Message, ReplyKeyboardRemove
 
 from loader import dp, db
 from filters import ChatTypeFilter, AdminFilter
-from keyboards.default import employees_menu, eco_branches_menu
+from keyboards.default import employees_menu, eco_branches_menu, games_menu
 from keyboards.inline import show_eco_branches, EcoBranchesCallbackData
-from states import AddEmployeeStates, AddBranchStates
+from states import AddEmployeeStates, AddBranchStates, AddGameStates
 
 
 # ----------------------- Employee panel ---------------------------------------------------------------------
@@ -233,6 +233,66 @@ async def err_add_eco_branch_location(message: Message):
     await err_msg.delete()
 
 # ------------------------- end EcoBranch panel -----------------------------------------------------------
+
+# ------------------------- start Game panel --------------------------------------------------------------
+
+
+@dp.message(ChatTypeFilter('private'), AdminFilter(), lambda msg: msg.text in ["🏆 Konkurs bo'limi", "🏆 Раздел конкурсов"])
+async def game_panel(message: Message):
+    lang = 'uz' if message.text == "🏆 Konkurs bo'limi" else 'ru'
+    await message.answer(message.text, reply_markup=await games_menu(lang))
+
+
+@dp.message(ChatTypeFilter('private'), AdminFilter(), lambda msg: msg.text in ["➕ Konkurs qo'shish", "➕ Добавить конкурс"])
+async def game_panel(message: Message, state: FSMContext):
+    lang = 'uz' if message.text == "➕ Konkurs qo'shish" else 'ru'
+    TEXTS = {
+        'uz': "Konkurs nomini yuboring:",
+        'ru': "Отправьте название конкурса:"
+    }
+    await message.answer(TEXTS[lang], reply_markup=ReplyKeyboardRemove())
+    await state.set_state(AddGameStates.name)
+    await state.set_data({'language': lang})
+
+
+@dp.message(ChatTypeFilter('private'), AdminFilter(), AddGameStates.name, lambda msg: msg.content_type == ContentType.TEXT)
+async def add_game_name(message: Message, state: FSMContext):
+    game_name = message.text
+    await state.update_data(game_name=game_name)
+    data = await state.get_data()
+    lang = data['language']
+    TEXTS = {
+        'uz': {
+            'success': "✅ Konkurs muvaffaqiyatli qo'shildi!",
+            'failed': "❗️ Konkurs qo'shishda xatolik yuz berdi!",
+            'end': "🏆 Konkurslar bo'limi"
+        },
+        'ru': {
+            'success': "✅ Конкурс успешно добавлен!",
+            'failed': "❗️ Произошла ошибка при добавлении конкурса!",
+            'end': "🏆 Раздел конкурсов"
+        }
+    }
+    try:
+        await db.add_game(**data)  # TODO: add_game() -> add_eco_game
+    except Exception as e:
+        await message.answer(TEXTS[lang]['failed'] + f"\n\nerror: {e}", reply_markup=None)
+    else:
+        await message.answer(TEXTS[lang]['success'], reply_markup=None)
+    await message.answer(TEXTS[lang]['end'], reply_markup=await games_menu(lang))
+    await state.clear()
+
+# ------------------------- end Game panel ----------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
 
 
 

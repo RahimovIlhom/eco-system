@@ -139,6 +139,15 @@ class Database:
         """
         return await self.execute(sql, (country, state, city, county, residential, neighbourhood, road, house_number, amenity, shop, man_made, postcode), fetchone=True)
 
+    async def add_game(self, game_name, *args, **kwargs):
+        sql = """
+        INSERT INTO games
+        (name, description, start_date, end_date, status, created_at, updated_at)
+        VALUES
+        (%s, %s, %s, %s, %s, %s, %s)
+        """
+        await self.execute(sql, (game_name, None, None, None, 'pending', datetime.now(), datetime.now()))
+
 
 
 
