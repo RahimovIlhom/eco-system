@@ -28,6 +28,8 @@ urlpatterns = [
     path('docs/swagger/', login_required(schema_view.with_ui('swagger', cache_timeout=0)), name='schema-swagger-ui'),
     path('docs/redoc/', login_required(schema_view.with_ui('redoc', cache_timeout=0)), name='schema-redoc'),
     path('api/v1/accounts/', include('accounts.urls')),
+    path('api/v1/games/', include('game_app.urls')),
+    path('api/v1/users/', include('users.urls')),
 ]
 
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
