@@ -59,6 +59,7 @@ class RegisteredQRCode(models.Model):
     participant = models.ForeignKey('users.Participant', on_delete=models.CASCADE)
     qrcode = models.OneToOneField('game_app.QRCode', on_delete=models.SET_NULL, null=True, blank=True)
     location = models.ForeignKey('address_app.Location', on_delete=models.SET_NULL, null=True, blank=True)
+    winner = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -69,17 +70,3 @@ class RegisteredQRCode(models.Model):
 
     class Meta:
         db_table = 'registered_qrcodes'
-
-
-class Winner(models.Model):
-    registered_qrcode = models.ForeignKey('users.RegisteredQRCode', on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    objects = models.Manager()
-
-    def __str__(self):
-        return f"{self.registered_qrcode}"
-
-    class Meta:
-        db_table = 'winners'

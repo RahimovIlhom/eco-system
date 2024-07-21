@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import EcoBranchEmployee, Participant, RegisteredQRCode, Winner
+from .models import EcoBranchEmployee, Participant, RegisteredQRCode
 
 
 @admin.register(EcoBranchEmployee)
@@ -17,8 +17,3 @@ class ParticipantAdmin(admin.ModelAdmin):
 @admin.register(RegisteredQRCode)
 class RegisteredQRCodeAdmin(admin.ModelAdmin):
     list_display = ['participant', 'qrcode', 'location', 'created_at']
-
-
-@admin.register(Winner)
-class WinnerAdmin(admin.ModelAdmin):
-    list_display = ['registered_qrcode', 'created_at']

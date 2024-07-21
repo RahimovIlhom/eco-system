@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import EcoBranchEmployee, Participant, RegisteredQRCode, Winner
+from .models import EcoBranchEmployee, Participant, RegisteredQRCode
 from eco_app.serializers import EcoBranchSerializer
 from game_app.serializers import QRCodeSerializer
 
@@ -41,9 +41,20 @@ class RegisteredQRCodesListSerializer(serializers.ModelSerializer):
 
 
 class WinnersListSerializer(serializers.ModelSerializer):
-    registered_qrcode = RegisteredQRCodesListSerializer(read_only=True)
+    participant = ParticipantSerializer(read_only=True)
+    qrcode = QRCodeSerializer(read_only=True)
 
     class Meta:
-        model = Winner
-        fields = ['id', 'registered_qrcode', 'created_at', 'updated_at']
+        model = RegisteredQRCode
+        fields = ['id', 'participant', 'qrcode', 'created_at', 'updated_at']
         ref_name = 'UsersWinnersListSerializer'
+
+
+class WinnerDetailSerializer(serializers.ModelSerializer):
+    participant = ParticipantSerializer(read_only=True)
+    qrcode = QRCodeSerializer(read_only=True)
+
+    class Meta:
+        model = RegisteredQRCode
+        fields = ['id', 'participant', 'qrcode', 'winner', 'created_at', 'updated_at']
+        ref_name = 'UsersWinnerDetailsSerializer'
