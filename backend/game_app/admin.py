@@ -2,10 +2,12 @@ from django.contrib import admin
 
 from .models import Game, QRCode
 
+from .translation import GameTranslationOptions
+
 
 @admin.register(Game)
 class GameAdmin(admin.ModelAdmin):
-    list_display = ('name', 'description', 'start_date', 'end_date', 'status')
+    list_display = ('id', 'name', 'description', 'start_date', 'end_date', 'status')
 
 
 @admin.register(QRCode)

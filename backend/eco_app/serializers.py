@@ -11,4 +11,4 @@ class EcoBranchSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = EcoBranch
-        fields = ['id', 'name', 'address', 'location', 'working_days', 'information']
+        fields = ['id', 'name_uz', 'name_ru', 'address', 'location', 'working_days', 'information_uz', 'information_ru']

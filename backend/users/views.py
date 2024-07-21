@@ -1,3 +1,5 @@
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics, status
@@ -84,6 +86,7 @@ class WinnersListAPIView(generics.ListAPIView):
         return Response(serializer.data)
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class CreateWinnerAPIView(APIView):
     permission_classes = [IsAuthenticated]
     serializer_class = WinnerDetailSerializer
@@ -127,7 +130,6 @@ class CreateWinnerAPIView(APIView):
         except RegisteredQRCode.DoesNotExist:
             return Response({"detail": "Bunday ID da ro'yxatdan o'tkazilgan QR kod topilmadi!"}, status=status.HTTP_404_NOT_FOUND)
 
-        print(registered_qrcode)
         if registered_qrcode.winner:
             return Response({"detail": "Bunday ID da ro'yxatdan o'tkazilgan QR kod allaqchon yutuq egasi!"}, status=status.HTTP_400_BAD_REQUEST)
 
