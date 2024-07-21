@@ -12,13 +12,13 @@ async def create_eco_callback_data(branch_id: int) -> str:
     return EcoBranchesCallbackData(branch_id=branch_id).pack()
 
 
-async def show_eco_branches() -> InlineKeyboardMarkup:
+async def show_eco_branches(lang: str = 'uz') -> InlineKeyboardMarkup:
     keyboard = InlineKeyboardBuilder()
     branches = await db.get_branches()
     for branch in branches:
         keyboard.add(
             InlineKeyboardButton(
-                text=branch['name'],
+                text=branch['name_uz'] if lang == 'uz' else branch['name_ru'],
                 callback_data=await create_eco_callback_data(branch_id=branch['id'])
             )
         )

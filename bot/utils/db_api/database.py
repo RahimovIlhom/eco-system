@@ -79,7 +79,10 @@ class Database:
         sql = """
         SELECT 
             id,
-            name,
+            name_uz,
+            name_ru,
+            address_id,
+            location_id,
             start_time,
             end_time,
             working_days,
@@ -90,7 +93,7 @@ class Database:
         """
         return await self.execute(sql, fetchall=True)
 
-    async def add_branch(self, name, location: Location, *args, **kwargs):
+    async def add_branch(self, name_uz, name_ru, location: Location, *args, **kwargs):
         from utils import get_location_details
         await self.add_location(location)  # add new location
         location_id = (await self.get_location_by_coordinates(location))['id']
@@ -99,11 +102,13 @@ class Database:
         address_id = (await self.get_address_by_datas(**address_dict))['id']
         sql = """
         INSERT INTO eco_branches
-        (name, address_id, location_id, start_time, end_time, working_days, information, created_at, updated_at)
+        (name, name_uz, name_ru, address_id, location_id, start_time, end_time, working_days, 
+        information, information_uz, information_ru, created_at, updated_at)
         VALUES
-        (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
-        await self.execute(sql, (name, address_id, location_id, None, None, 'all_days', None, datetime.now(), datetime.now()))
+        await self.execute(sql, (name_uz, name_uz, name_ru, address_id, location_id, None, None, 'all_days',
+                                 'N/A', 'N/A', 'N/A', datetime.now(), datetime.now()))
 
     async def add_location(self, location: Location):
         sql = """
@@ -121,36 +126,52 @@ class Database:
         """
         return await self.execute(sql, (location.latitude, location.longitude), fetchone=True)
 
-    async def add_address(self, country, state, city, county, residential, neighbourhood, road, house_number, amenity, shop, man_made, postcode):
+    async def add_address(self, country_uz, country_ru, state_uz, state_ru, city_uz, city_ru, county_uz, county_ru,
+                          residential_uz, residential_ru, neighbourhood_uz, neighbourhood_ru, road_uz, road_ru,
+                          house_number_uz, house_number_ru, amenity_uz, amenity_ru, shop_uz, shop_ru,
+                          man_made_uz, man_made_ru, postcode_uz, postcode_ru):
         sql = """
         INSERT INTO addresses
-        (country, state, city, county, residential, neighbourhood, road, house_number, amenity, shop, man_made, postcode)
+        (country, country_uz, country_ru, state, state_uz, state_ru, city, city_uz, city_ru, 
+        county, county_uz, county_ru, residential, residential_uz, residential_ru, neighbourhood, neighbourhood_uz, neighbourhood_ru, 
+        road, road_uz, road_ru, house_number, house_number_uz, house_number_ru, amenity, amenity_uz, amenity_ru, 
+        shop, shop_uz, shop_ru, man_made, man_made_uz, man_made_ru, postcode, postcode_uz, postcode_ru)
         VALUES
-        (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
+        %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
-        await self.execute(sql, (country, state, city, county, residential, neighbourhood, road, house_number, amenity, shop, man_made, postcode))
+        await self.execute(sql,
+                           (country_uz, country_uz, country_ru, state_uz, state_uz, state_ru, city_uz, city_uz, city_ru,
+                            county_uz, county_uz, county_ru, residential_uz, residential_uz, residential_ru,
+                            neighbourhood_uz, neighbourhood_uz, neighbourhood_ru, road_uz, road_uz, road_ru,
+                            house_number_uz, house_number_uz, house_number_ru, amenity_uz,
+                            amenity_uz, amenity_ru, shop_uz, shop_uz, shop_ru, man_made_uz, man_made_uz, man_made_ru,
+                            postcode_uz, postcode_uz, postcode_ru))
 
-    async def get_address_by_datas(self, country, state, city, county, residential, neighbourhood, road, house_number, amenity, shop, man_made, postcode):
+    async def get_address_by_datas(self, country_uz, state_uz, city_uz, county_uz, residential_uz, neighbourhood_uz,
+                                   road_uz, house_number_uz, amenity_uz, shop_uz, man_made_uz, postcode_uz, *args, **kwargs):
         sql = """
         SELECT id, country, state, city, county, residential, neighbourhood, road, house_number, amenity, shop, man_made, postcode
         FROM addresses
         WHERE country = %s AND state = %s AND city = %s AND county = %s AND residential = %s AND neighbourhood = %s
         AND road = %s AND house_number = %s AND amenity = %s AND shop = %s AND man_made = %s AND postcode = %s
         """
-        return await self.execute(sql, (country, state, city, county, residential, neighbourhood, road, house_number, amenity, shop, man_made, postcode), fetchone=True)
+        return await self.execute(sql, (
+            country_uz, state_uz, city_uz, county_uz, residential_uz, neighbourhood_uz, road_uz, house_number_uz,
+            amenity_uz, shop_uz, man_made_uz, postcode_uz), fetchone=True)
 
-    async def add_game(self, game_name, *args, **kwargs):
+    async def add_game(self, game_name_uz, game_name_ru, *args, **kwargs):
         sql = """
         INSERT INTO games
-        (name, description, start_date, end_date, status, created_at, updated_at)
+        (name, name_uz, name_ru, description, description_uz, description_ru, start_date, end_date, status, created_at, updated_at)
         VALUES
-        (%s, %s, %s, %s, %s, %s, %s)
+        (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
-        await self.execute(sql, (game_name, None, None, None, 'pending', datetime.now(), datetime.now()))
+        await self.execute(sql, (game_name_uz, game_name_uz, game_name_ru, 'N/A', 'N/A', 'N/A', None, None, 'pending', datetime.now(), datetime.now()))
 
     async def get_active_games(self):
         sql = """
-        SELECT id, name, description, start_date, end_date, status, created_at, updated_at
+        SELECT id, name_uz, name_ru, description, start_date, end_date, status, created_at, updated_at
         FROM games
         WHERE status = 'active'
         """
@@ -163,7 +184,7 @@ class Database:
         VALUES
         (%s, %s, %s, %s, %s, %s, %s)
         """
-        await self.execute(sql, (game_id, eco_branch_id, code, True, 10, datetime.now(), datetime.now()))
+        await self.execute(sql, (game_id, eco_branch_id, code, True, 5, datetime.now(), datetime.now()))
 
     async def check_qr_code(self, code):
         sql = """
@@ -172,33 +193,3 @@ class Database:
         WHERE code = %s
         """
         return await self.execute(sql, (code,), fetchone=True)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

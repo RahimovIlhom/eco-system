@@ -81,7 +81,7 @@ async def add_employee_contact(message: Message, state: FSMContext):
     if await db.get_employee(tg_id):
         return await message.answer(TEXTS[lang]['already'])
     await state.update_data(phone=phone, tg_id=tg_id)
-    await message.answer(TEXTS[lang]['next'], reply_markup=await show_eco_branches())
+    await message.answer(TEXTS[lang]['next'], reply_markup=await show_eco_branches(lang))
     await state.set_state(AddEmployeeStates.eco_branch)
 
 
@@ -155,20 +155,48 @@ async def eco_branch_panel(message: Message):
 async def add_eco_branch(message: Message, state: FSMContext):
     lang = 'ru' if message.text == "➕ Добавить пункт" else 'uz'
     TEXTS = {
-        'uz': "Punkt nomini yuboring:",
-        'ru': "Название пункта:"
+        'uz': "🇺🇿 Punkt nomini o'zbek tilida yuboring:",
+        'ru': "🇺🇿 Отправьте название пункта на узбекском языке:"
     }
     await message.answer(TEXTS[lang], reply_markup=ReplyKeyboardRemove())
-    await state.set_state(AddBranchStates.name)
+    await state.set_state(AddBranchStates.name_uz)
     await state.set_data({'language': lang})
 
 
-@dp.message(ChatTypeFilter('private'), AdminFilter(), AddBranchStates.name, lambda msg: msg.content_type == ContentType.TEXT)
+@dp.message(ChatTypeFilter('private'), AdminFilter(), AddBranchStates.name_uz, lambda msg: msg.content_type == ContentType.TEXT)
 async def add_eco_branch_name(message: Message, state: FSMContext):
     data = await state.get_data()
     lang = data['language']
     name = message.text
-    await state.update_data(name=name)
+    await state.update_data(name_uz=name)
+    TEXTS = {
+        'uz': "🇷🇺 Punkt nomini rus tilida yuboring:",
+        'ru': "🇷🇺 Отправьте название пункта на русском языке:"
+    }
+    await message.answer(TEXTS[lang])
+    await state.set_state(AddBranchStates.name_ru)
+
+
+@dp.message(ChatTypeFilter('private'), AdminFilter(), AddBranchStates.name_uz, lambda msg: msg.content_type == ContentType.ANY)
+async def err_add_eco_branch_name(message: Message):
+    await message.delete()
+    data = await message.get_data()
+    lang = data['language']
+    TEXTS = {
+        'uz': "❗️ Iltimos, punktni nomini yuboring!",
+        'ru': "❗️ Пожалуйста, отправьте название пункта!"
+    }
+    err_msg = await message.answer(TEXTS[lang])
+    await asyncio.sleep(2)
+    await err_msg.delete()
+
+
+@dp.message(ChatTypeFilter('private'), AdminFilter(), AddBranchStates.name_ru, lambda msg: msg.content_type == ContentType.TEXT)
+async def add_eco_branch_name(message: Message, state: FSMContext):
+    data = await state.get_data()
+    lang = data['language']
+    name = message.text
+    await state.update_data(name_ru=name)
     TEXTS = {
         'uz': "📍 Punkt lokatsiyasini yuboring:",
         'ru': "📍 Отправьте местоположение пункта:"
@@ -177,7 +205,7 @@ async def add_eco_branch_name(message: Message, state: FSMContext):
     await state.set_state(AddBranchStates.location)
 
 
-@dp.message(ChatTypeFilter('private'), AdminFilter(), AddBranchStates.name, lambda msg: msg.content_type == ContentType.ANY)
+@dp.message(ChatTypeFilter('private'), AdminFilter(), AddBranchStates.name_ru, lambda msg: msg.content_type == ContentType.ANY)
 async def err_add_eco_branch_name(message: Message):
     await message.delete()
     data = await message.get_data()
@@ -247,18 +275,46 @@ async def game_panel(message: Message):
 async def game_panel(message: Message, state: FSMContext):
     lang = 'uz' if message.text == "➕ Konkurs qo'shish" else 'ru'
     TEXTS = {
-        'uz': "Konkurs nomini yuboring:",
-        'ru': "Отправьте название конкурса:"
+        'uz': "🇺🇿 Konkurs o'zbek tilida yuboring:",
+        'ru': "🇺🇿 Конкурс отправьте на узбекском языке:"
     }
     await message.answer(TEXTS[lang], reply_markup=ReplyKeyboardRemove())
-    await state.set_state(AddGameStates.name)
+    await state.set_state(AddGameStates.name_uz)
     await state.set_data({'language': lang})
 
 
-@dp.message(ChatTypeFilter('private'), AdminFilter(), AddGameStates.name, lambda msg: msg.content_type == ContentType.TEXT)
+@dp.message(ChatTypeFilter('private'), AdminFilter(), AddGameStates.name_uz, lambda msg: msg.content_type == ContentType.TEXT)
+async def add_game_name_uz(message: Message, state: FSMContext):
+    game_name = message.text
+    await state.update_data(game_name_uz=game_name)
+    data = await state.get_data()
+    lang = data['language']
+    TEXTS = {
+        'uz': "🇷🇺 Konkurs rus tilida yuboring:",
+        'ru': "🇷🇺 Отправьте конкурс на русском языке:"
+    }
+    await message.answer(TEXTS[lang])
+    await state.set_state(AddGameStates.name_ru)
+
+
+@dp.message(ChatTypeFilter('private'), AdminFilter(), AddGameStates.name_uz, lambda msg: msg.content_type == ContentType.ANY)
+async def err_add_game_name_uz(message: Message):
+    await message.delete()
+    data = await message.get_data()
+    lang = data['language']
+    TEXTS = {
+        'uz': "❗️ Iltimos, konkurs nomini o'zbek tilida yuboring!",
+        'ru': "❗️ Пожалуйста, отправьте название конкурса на узбекском языке!"
+    }
+    err_msg = await message.answer(TEXTS[lang])
+    await asyncio.sleep(2)
+    await err_msg.delete()
+
+
+@dp.message(ChatTypeFilter('private'), AdminFilter(), AddGameStates.name_ru, lambda msg: msg.content_type == ContentType.TEXT)
 async def add_game_name(message: Message, state: FSMContext):
     game_name = message.text
-    await state.update_data(game_name=game_name)
+    await state.update_data(game_name_ru=game_name)
     data = await state.get_data()
     lang = data['language']
     TEXTS = {
@@ -281,6 +337,20 @@ async def add_game_name(message: Message, state: FSMContext):
         await message.answer(TEXTS[lang]['success'], reply_markup=None)
     await message.answer(TEXTS[lang]['end'], reply_markup=await games_menu(lang))
     await state.clear()
+
+
+@dp.message(ChatTypeFilter('private'), AdminFilter(), AddGameStates.name_ru, lambda msg: msg.content_type == ContentType.ANY)
+async def err_add_game_name_ru(message: Message):
+    await message.delete()
+    data = await message.get_data()
+    lang = data['language']
+    TEXTS = {
+        'uz': "❗️ Iltimos, konkurs nomini rus tilida yuboring!",
+        'ru': "❗️ Пожалуйста, отправьте название конкурса на русском языке!"
+    }
+    err_msg = await message.answer(TEXTS[lang])
+    await asyncio.sleep(2)
+    await err_msg.delete()
 
 # ------------------------- end Game panel ----------------------------------------------------------------
 
