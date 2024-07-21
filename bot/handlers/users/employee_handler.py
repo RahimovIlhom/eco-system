@@ -14,10 +14,20 @@ from utils import create_qr_poster
 async def qr_code_handler(message: Message):
     lang = 'uz' if message.text == '📱 QR code chiqarish' else 'ru'
     TEXTS = {
-        'uz': "QR code chiqarish uchun konkursni tanlang:",
-        'ru': "Выберите конкурс для генерации QR-кода:"
+        'uz': {
+            "accept": "QR code chiqarish uchun konkursni tanlang:",
+            "reject": "❌ QR code chiqarish hozirda mumkin emas!"
+        },
+        'ru': {
+            'accept': "Выберите конкурс для генерации QR-кода:",
+            'reject': "❌ Генерация QR кода в настоящее время невозможна!"
+        }
     }
-    await message.answer(TEXTS[lang], reply_markup=await choose_game_manu(lang))
+    games = await db.get_active_games()
+    if not games:
+        await message.answer(TEXTS[lang]['reject'])
+    else:
+        await message.answer(TEXTS[lang]['accept'], reply_markup=await choose_game_manu(lang))
 
 
 @dp.callback_query(EmployeeFilter(), CreateQRCodeCallbackData.filter())

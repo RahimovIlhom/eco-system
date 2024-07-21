@@ -147,7 +147,7 @@ async def err_add_employee_branch(message: Message):
 
 @dp.message(ChatTypeFilter('private'), AdminFilter(), lambda msg: msg.text in ["🏢 Punktlar bo'limi", "🏢 Раздел пунктов"])
 async def eco_branch_panel(message: Message):
-    lang = 'ru' if message.text == "💼 Раздел отделов" else 'uz'
+    lang = 'ru' if message.text == "🏢 Раздел пунктов" else 'uz'
     await message.answer(message.text, reply_markup=await eco_branches_menu(lang))
 
 

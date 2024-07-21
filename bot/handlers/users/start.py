@@ -1,8 +1,9 @@
 from aiogram import types
-from aiogram.filters import CommandStart
+from aiogram.filters import CommandStart, CommandObject
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State
 from aiogram.types import Message
+from aiogram.utils.payload import decode_payload
 
 from loader import dp, db
 from keyboards.default import language_markup, admin_menu, employee_menu
@@ -36,8 +37,12 @@ async def employee_start(message: types.Message):
     await message.answer(TEXTS[lang], reply_markup=await employee_menu(lang))
 
 
-@dp.message(ChatTypeFilter('private'), CommandStart())
-async def bot_start(message: Message):
+@dp.message(ChatTypeFilter('private'), CommandStart(deep_link=True))
+async def bot_start(message: Message, command: CommandObject):
+    args = command.args
+    print(args)
+    payload = decode_payload(args)
+    print(payload)
     await message.answer(f"Assalomu alaykum, hurmatli {message.from_user.full_name} EcoSystem botiga xush kelibsiz!\n"
                          f"Здравствуйте, уважаемый {message.from_user.full_name}, добро пожаловать в EcoSystem бот!\n\n"
                          f"Iltimos, tilni tanlang / Пожалуйста, выберите язык.", reply_markup=await language_markup())

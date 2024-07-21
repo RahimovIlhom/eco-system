@@ -5,14 +5,17 @@ from PIL import Image, ImageDraw, ImageFont
 import qrcode
 from datetime import datetime, timedelta
 
+from aiogram.utils.deep_linking import create_start_link
+
 
 async def create_qr_poster(unique_code, text='Aktivlik vaqti', validity_minutes=5):
+    from loader import bot
     template_path = 'data/qr_template/qrcode.png'
-    bot_link = "https://t.me/eco_system_2024_bot"
-    qr_data = f"{bot_link}?start={unique_code}"
+    link = await create_start_link(bot, f"{unique_code}")
+    bot_link = link.split('?')[0]
     # QR kodni yaratish
     qr = qrcode.QRCode(version=5, box_size=10, border=5)
-    qr.add_data(qr_data)
+    qr.add_data(link)
     qr.make(fit=True)
     qr_img = qr.make_image(fill='black', back_color='white')
 
@@ -41,7 +44,7 @@ async def create_qr_poster(unique_code, text='Aktivlik vaqti', validity_minutes=
         draw.text((740, 635), expires_text, fill="black", font=font)
 
     # Unikal kod
-    draw.text((570, 1600), f"Code: {unique_code}", fill="black", font=font)
+    draw.text((570, 1600), f"Code: {str(unique_code).upper()}", fill="black", font=font)
 
     # SSILKA
     draw.text((450, 1900), bot_link, fill="black", font=font)
