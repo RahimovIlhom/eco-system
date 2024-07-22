@@ -27,16 +27,16 @@ async def admin_start(message: types.Message, state: FSMContext):
         await message.answer(TEXTS[admin_lang['language']], reply_markup=await admin_menu(admin_lang['language']))
 
 
-# @dp.message(ChatTypeFilter('private'), CommandStart(), EmployeeFilter())
-# async def employee_start(message: types.Message, state: FSMContext):
-#     await state.clear()
-#     employee = await db.get_employee(message.from_user.id)
-#     lang = employee['language']
-#     TEXTS = {
-#         'uz': "Bosh menu",
-#         'ru': "Главное меню",
-#     }
-#     await message.answer(TEXTS[lang], reply_markup=await employee_menu(lang))
+@dp.message(ChatTypeFilter('private'), CommandStart(), EmployeeFilter())
+async def employee_start(message: types.Message, state: FSMContext):
+    await state.clear()
+    employee = await db.get_employee(message.from_user.id)
+    lang = employee['language']
+    TEXTS = {
+        'uz': "Bosh menu",
+        'ru': "Главное меню",
+    }
+    await message.answer(TEXTS[lang], reply_markup=await employee_menu(lang))
 
 
 @dp.message(ChatTypeFilter('private'), CommandStart(deep_link=True))

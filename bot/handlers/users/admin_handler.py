@@ -21,6 +21,11 @@ async def employee_panel(message: Message):
     await message.answer(message.text, reply_markup=await employees_menu(lang))
 
 
+@dp.message(ChatTypeFilter('private'), AdminFilter(), lambda msg: msg.text in ["👤 Xodimlar", "👤 Сотрудники"])
+async def employee_list_panel(message: Message):
+    pass
+
+
 @dp.message(ChatTypeFilter('private'), AdminFilter(), State(None), lambda msg: msg.text in ["➕ Xodim qo'shish", "➕ Добавить сотрудника"])
 async def add_employee(message: Message, state: FSMContext):
     lang = 'uz' if message.text == "➕ Xodim qo'shish" else 'ru'
@@ -151,6 +156,11 @@ async def eco_branch_panel(message: Message):
     await message.answer(message.text, reply_markup=await eco_branches_menu(lang))
 
 
+@dp.message(ChatTypeFilter('private'), AdminFilter(), lambda msg: msg.text in ["🏢 Punktlar", "🏢 Пункты"])
+async def eco_branch_list_panel(message: Message):
+    pass
+
+
 @dp.message(ChatTypeFilter('private'), AdminFilter(), lambda msg: msg.text in ["➕ Punkt qo'shish", "➕ Добавить пункт"])
 async def add_eco_branch(message: Message, state: FSMContext):
     lang = 'ru' if message.text == "➕ Добавить пункт" else 'uz'
@@ -269,6 +279,11 @@ async def err_add_eco_branch_location(message: Message):
 async def game_panel(message: Message):
     lang = 'uz' if message.text == "🏆 Konkurs bo'limi" else 'ru'
     await message.answer(message.text, reply_markup=await games_menu(lang))
+
+
+@dp.message(ChatTypeFilter('private'), AdminFilter(), lambda msg: msg.text in ["🏆 Konkurslar", "🏆 Конкурсы"])
+async def game_list_panel(message: Message):
+    pass
 
 
 @dp.message(ChatTypeFilter('private'), AdminFilter(), lambda msg: msg.text in ["➕ Konkurs qo'shish", "➕ Добавить конкурс"])
