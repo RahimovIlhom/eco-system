@@ -3,11 +3,12 @@ from aiogram.filters import CommandStart, CommandObject
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State
 from aiogram.types import Message
-from aiogram.utils.payload import decode_payload
 
 from loader import dp, db
-from keyboards.default import language_markup, admin_menu, employee_menu
+from keyboards.default import language_markup, admin_menu, employee_menu, participant_menu
 from filters import ChatTypeFilter, AdminFilter, EmployeeFilter
+from .register import register_qr_code, register_user
+from states import AddParticipantStates
 
 
 @dp.message(ChatTypeFilter('private'), CommandStart(), AdminFilter())
@@ -26,26 +27,63 @@ async def admin_start(message: types.Message, state: FSMContext):
         await message.answer(TEXTS[admin_lang['language']], reply_markup=await admin_menu(admin_lang['language']))
 
 
-@dp.message(ChatTypeFilter('private'), CommandStart(), EmployeeFilter())
-async def employee_start(message: types.Message):
-    employee = await db.get_employee(message.from_user.id)
-    lang = employee['language']
+# @dp.message(ChatTypeFilter('private'), CommandStart(), EmployeeFilter())
+# async def employee_start(message: types.Message, state: FSMContext):
+#     await state.clear()
+#     employee = await db.get_employee(message.from_user.id)
+#     lang = employee['language']
+#     TEXTS = {
+#         'uz': "Bosh menu",
+#         'ru': "Главное меню",
+#     }
+#     await message.answer(TEXTS[lang], reply_markup=await employee_menu(lang))
+
+
+@dp.message(ChatTypeFilter('private'), CommandStart(deep_link=True))
+async def participant_start_link(message: Message, command: CommandObject, state: FSMContext):
+    await state.clear()
+    args = command.args
+    user = await db.get_participant(message.from_user.id)
+
+    if user:
+        await handle_existing_user(message, state, user, args)
+    else:
+        await handle_new_user(message, state, args)
+
+
+@dp.message(ChatTypeFilter('private'), CommandStart())
+async def participant_start(message: types.Message, state: FSMContext):
+    await state.clear()
+    user = await db.get_participant(message.from_user.id)
+    if user:
+        await send_main_menu(message, user['language'])
+    else:
+        await state.set_state(AddParticipantStates.language)
+        await register_user(message, state)
+
+
+async def handle_existing_user(message: Message, state: FSMContext, user: dict, args: str = ''):
+    if args:
+        await state.set_state(State('register_qr_code'))
+        await state.update_data(code=args)
+        await register_qr_code(message, state, user['language'])
+    else:
+        await send_main_menu(message, user['language'])
+
+
+async def handle_new_user(message: Message, state: FSMContext, args: str = ''):
+    await state.set_state(AddParticipantStates.language)
+    if args:
+        await state.update_data(code=args)
+    await register_user(message, state)
+
+
+async def send_main_menu(message: Message, language: str):
     TEXTS = {
         'uz': "Bosh menu",
         'ru': "Главное меню",
     }
-    await message.answer(TEXTS[lang], reply_markup=await employee_menu(lang))
-
-
-@dp.message(ChatTypeFilter('private'), CommandStart(deep_link=True))
-async def bot_start(message: Message, command: CommandObject):
-    args = command.args
-    print(args)
-    payload = decode_payload(args)
-    print(payload)
-    await message.answer(f"Assalomu alaykum, hurmatli {message.from_user.full_name} EcoSystem botiga xush kelibsiz!\n"
-                         f"Здравствуйте, уважаемый {message.from_user.full_name}, добро пожаловать в EcoSystem бот!\n\n"
-                         f"Iltimos, tilni tanlang / Пожалуйста, выберите язык.", reply_markup=await language_markup())
+    await message.answer(TEXTS[language], reply_markup=await participant_menu(language))
 
 
 # ------------ admin set language ----------------------------------------------------------------------------------

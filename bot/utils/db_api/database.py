@@ -75,6 +75,28 @@ class Database:
             sql = "UPDATE admins SET language = %s WHERE tg_id = %s"
             await self.execute(sql, (language, tg_id))
 
+    async def get_eco_branch(self, branch_id):
+        sql = """
+        SELECT
+            eb.id,
+            eb.name_uz,
+            eb.name_ru,
+            eb.address_id,
+            eb.location_id,
+            eb.start_time,
+            eb.end_time,
+            eb.working_days,
+            eb.information,
+            eb.created_at,
+            eb.updated_at,
+            l.latitude,
+            l.longitude
+        FROM eco_branches eb
+        JOIN locations l ON eb.location_id = l.id
+        WHERE eb.id = %s
+        """
+        return await self.execute(sql, (branch_id,), fetchone=True)
+
     async def get_branches(self):
         sql = """
         SELECT 
@@ -193,3 +215,52 @@ class Database:
         WHERE code = %s
         """
         return await self.execute(sql, (code,), fetchone=True)
+
+    async def get_participant(self, tg_id):
+        sql = """
+        SELECT tg_id, language, fullname, phone, created_at, updated_at
+        FROM participants
+        WHERE tg_id = %s
+        """
+        return await self.execute(sql, (tg_id,), fetchone=True)
+
+    async def add_participant(self, tg_id, language, fullname, phone, *args, **kwargs):
+        sql = """
+        INSERT INTO participants
+        (tg_id, language, fullname, phone, created_at, updated_at)
+        VALUES
+        (%s, %s, %s, %s, %s, %s)
+        """
+        await self.execute(sql, (tg_id, language, fullname, phone, datetime.now(), datetime.now()))
+
+    async def get_registered_qr_code(self, qrcode_id):
+        sql = """
+        SELECT 
+            q.id, 
+            q.participant_id, 
+            q.qrcode_id, 
+            q.location_id, 
+            q.winner, 
+            q.created_at, 
+            q.updated_at, 
+            p.fullname 
+        FROM registered_qrcodes q
+        JOIN participants p ON q.participant_id = p.tg_id
+        WHERE q.qrcode_id = %s
+        """
+        return await self.execute(sql, (qrcode_id,), fetchone=True)
+
+    async def add_registered_qrcode(self, participant_id, qrcode_id, location_id):
+        sql = """
+        INSERT INTO registered_qrcodes
+        (participant_id, qrcode_id, location_id, winner, created_at, updated_at)
+        VALUES
+        (%s, %s, %s, %s, %s, %s)
+        """
+        await self.execute(sql, (participant_id, qrcode_id, location_id, False, datetime.now(), datetime.now()))
+
+    async def update_active_qr_code(self, qrcode_id):
+        sql = """
+        UPDATE qrcodes SET is_active = FALSE WHERE id = %s
+        """
+        await self.execute(sql, (qrcode_id,))
