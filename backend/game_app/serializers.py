@@ -1,11 +1,17 @@
 from rest_framework import serializers
 from .models import Game, QRCode
+from users.models import RegisteredQRCode
 
 
 class GamesListSerializer(serializers.ModelSerializer):
+    count = serializers.SerializerMethodField('get_count')
+
     class Meta:
         model = Game
-        fields = ['id', 'name_uz', 'name_ru', 'description_uz', 'description_ru', 'start_date', 'end_date', 'status']
+        fields = ['id', 'name_uz', 'name_ru', 'description_uz', 'description_ru', 'start_date', 'end_date', 'status', 'count']
+
+    def get_count(self, obj):
+        return RegisteredQRCode.objects.filter(qrcode__game__id=obj.id).count()
 
 
 class QRCodeSerializer(serializers.ModelSerializer):
