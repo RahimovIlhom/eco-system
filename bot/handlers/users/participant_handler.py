@@ -119,4 +119,34 @@ async def information_handler(message: Message):
 
 @dp.message(ChatTypeFilter('private'), State(None), lambda msg: msg.text in ["🏆 Konkurs haqida", "🏆 О конкурсе"])
 async def about_concurs(message: Message):
-    pass
+    lang = 'uz' if message.text == "🏆 Konkurs haqida" else 'ru'
+    info = await db.get_game_info()
+
+    if info:
+        if lang == 'uz':
+            formatted_message = (
+                f"🏆 **Konkurs Haqida**\n\n"
+                f"**{info['title_uz']}**\n\n"
+                f"**Tavsifi:** {info['description_uz']}\n"
+            )
+        else:
+            formatted_message = (
+                f"🏆 **О конкурсе**\n\n"
+                f"**{info['title_ru']}**\n\n"
+                f"**Описание:** {info['description_ru']}\n"
+            )
+
+        # Yuboriladigan xabar
+        await message.answer(formatted_message, parse_mode='Markdown')
+
+        # Rasmni yuborish
+        if info['image_url']:
+            await message.answer_photo(info['image_url'])
+    else:
+        if lang == 'uz':
+            formatted_message = "❌ Konkurs haqidagi ma'lumot topilmadi."
+        else:
+            formatted_message = "❌ Информация о конкурсе не найдена."
+
+        await message.answer(formatted_message, parse_mode='Markdown')
+

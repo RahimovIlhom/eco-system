@@ -294,8 +294,8 @@ class Database:
 
     async def get_game_info(self):
         sql = """
-        SELECT id, name_uz, name_ru, description_uz, description_ru, image_url
-        FROM games
+        SELECT id, title_uz, title_ru, description_uz, description_ru, image_url
+        FROM game_infos
         ORDER BY id DESC
         """
         return await self.execute(sql, fetchone=True)
