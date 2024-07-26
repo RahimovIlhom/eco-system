@@ -291,3 +291,11 @@ class Database:
         UPDATE qrcodes SET is_active = FALSE WHERE id = %s
         """
         await self.execute(sql, (qrcode_id,))
+
+    async def get_game_info(self):
+        sql = """
+        SELECT id, name_uz, name_ru, description_uz, description_ru, image_url
+        FROM games
+        ORDER BY id DESC
+        """
+        return await self.execute(sql, fetchone=True)

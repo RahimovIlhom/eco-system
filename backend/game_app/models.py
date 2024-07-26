@@ -44,3 +44,15 @@ class QRCode(models.Model):
 
     class Meta:
         db_table = 'qrcodes'
+
+
+class GameInfo(models.Model):
+    title = models.CharField(max_length=255)
+    description = models.TextField(null=True, blank=True)
+    image_url = models.CharField(max_length=255, null=True, blank=True)
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        db_table = 'game_infos'
