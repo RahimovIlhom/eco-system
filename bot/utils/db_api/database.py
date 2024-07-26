@@ -233,6 +233,10 @@ class Database:
         """
         await self.execute(sql, (tg_id, language, fullname, phone, datetime.now(), datetime.now()))
 
+    async def participant_set_language(self, tg_id, language: str) -> None:
+        sql = "UPDATE participants SET language = %s WHERE tg_id = %s"
+        await self.execute(sql, (language, tg_id))
+
     async def get_registered_qr_code(self, qrcode_id):
         sql = """
         SELECT 

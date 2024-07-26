@@ -8,7 +8,7 @@ from aiogram.types import Message, ReplyKeyboardRemove
 from loader import dp, db
 from filters import ChatTypeFilter
 from states import RegisterQRCodeStates
-from keyboards.default import participant_menu, location_markup
+from keyboards.default import participant_menu, location_markup, setting_markup, language_markup
 
 
 # ----------------------- Start register QR code---------------------------------------------------------
@@ -77,9 +77,33 @@ async def register_qr_code(message: Message, state: FSMContext):
 
 # ----------------------- Start settings menu---------------------------------------------------------
 
-@dp.message(ChatTypeFilter('private'), State(None), lambda msg: msg.text in ["⚙️ Sozlamalar", "⚙️ Настройки"])
+@dp.message(ChatTypeFilter('private'), State(None), lambda msg: msg.text in ["⚙️ Sozlamalar", "⚙️ Настройки"])
 async def settings_menu(message: Message):
-    pass
+    lang = 'uz' if message.text == "⚙️ Sozlamalar" else 'ru'
+    await message.answer(message.text, reply_markup=await setting_markup(lang))
+
+
+@dp.message(ChatTypeFilter('private'), State(None), lambda msg: msg.text in ["🌐 Tilni o'zgartirish", "🌐 Изменить язык"])
+async def change_language(message: Message, state: FSMContext):
+    lang = 'uz' if message.text == "🌐 Tilni o'zgartirish" else 'ru'
+    TEXTS = {
+        'uz': "Tilni tanlang",
+        'ru': "Выберите язык"
+    }
+    await message.answer(TEXTS[lang], reply_markup=await language_markup())
+    await state.set_state(State('participant_lang'))
+
+
+@dp.message(State('participant_lang'), lambda msg: msg.text in ['🇺🇿 O\'zbek tili', '🇷🇺 Русский язык'])
+async def set_participant_language(msg: Message, state: FSMContext):
+    lang = 'uz' if msg.text == "🇺🇿 O\'zbek tili" else 'ru'
+    await db.participant_set_language(msg.from_user.id, lang)
+    TEXTS = {
+        'uz': "Bosh menu",
+        'ru': "Главное меню",
+    }
+    await msg.answer(TEXTS[lang], reply_markup=await participant_menu(lang))
+    await state.clear()
 
 
 # ----------------------- Start information menu---------------------------------------------------------
