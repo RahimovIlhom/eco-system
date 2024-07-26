@@ -4,3 +4,4 @@ from .admin_keyboards import admin_menu, employees_menu, eco_branches_menu, game
 from .employee_keyboards import employee_menu
 from .participant_keyboards import participant_menu
 from .contact_keyboard import contact_keyboard
+from .yes_or_no_keyboards import yes_or_no

@@ -12,6 +12,10 @@ async def participant_menu(lang: str = 'uz') -> ReplyKeyboardMarkup:
                 KeyboardButton(text="ℹ️ Ma'lumotlarim" if lang == 'uz' else "ℹ️ Мои данные"),
             ],
             [
+                KeyboardButton(text="💎 Mening ballarim" if lang == 'uz' else "💎 Мои баллы"),
+                KeyboardButton(text="👥 Do'stlarni taklif qilish" if lang == 'uz' else "👥 Пригласить друзей"),
+            ],
+            [
                 KeyboardButton(text="🏆 Konkurs haqida" if lang == 'uz' else "🏆 О конкурсе"),
             ]
         ],
