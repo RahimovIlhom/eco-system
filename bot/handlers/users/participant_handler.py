@@ -8,7 +8,7 @@ from aiogram.types import Message, ReplyKeyboardRemove
 from loader import dp, db
 from filters import ChatTypeFilter
 from states import RegisterQRCodeStates
-from keyboards.default import participant_menu, location_markup, setting_markup, language_markup
+from keyboards.default import participant_menu, location_markup, setting_markup, language_markup, information_markup
 
 
 # ----------------------- Start register QR code---------------------------------------------------------
@@ -110,7 +110,8 @@ async def set_participant_language(msg: Message, state: FSMContext):
 
 @dp.message(ChatTypeFilter('private'), State(None), lambda msg: msg.text in ["ℹ️ Ma'lumotlarim", "ℹ️ Мои данные"])
 async def information_handler(message: Message):
-    pass
+    lang = 'uz' if message.text == "ℹ️ Ma'lumotlarim" else 'ru'
+    await message.answer(message.text, reply_markup=await information_markup(lang))
 
 
 # ----------------------- Start about concurs menu---------------------------------------------------------

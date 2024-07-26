@@ -237,6 +237,29 @@ class Database:
         sql = "UPDATE participants SET language = %s WHERE tg_id = %s"
         await self.execute(sql, (language, tg_id))
 
+    async def participant_set_fullname(self, tg_id, fullname: str) -> None:
+        sql = "UPDATE participants SET fullname = %s WHERE tg_id = %s"
+        await self.execute(sql, (fullname, tg_id))
+
+    async def get_participant_qr_codes(self, tg_id):
+        sql = """
+        SELECT 
+            q.id, 
+            q.participant_id, 
+            q.qrcode_id, 
+            q.location_id, 
+            q.winner, 
+            q.created_at, 
+            q.updated_at, 
+            p.fullname,
+            v.code  -- QR kod qiymatini qo'shish
+        FROM registered_qrcodes q
+        JOIN participants p ON q.participant_id = p.tg_id
+        JOIN qrcodes v ON q.qrcode_id = v.id  -- QR kod qiymatlarini olish
+        WHERE q.participant_id = %s
+        """
+        return await self.execute(sql, (tg_id,), fetchall=True)
+
     async def get_registered_qr_code(self, qrcode_id):
         sql = """
         SELECT 

@@ -6,3 +6,4 @@ from .participant_keyboards import participant_menu
 from .contact_keyboard import contact_keyboard
 from .yes_or_no_keyboards import yes_or_no
 from .settings_keyboards import setting_markup
+from .information_keyboards import information_markup
