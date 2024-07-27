@@ -1,11 +1,13 @@
 from datetime import timedelta, datetime
 
 from aiogram.enums import ContentType
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State
 from aiogram.types import Message, ReplyKeyboardRemove
+from aiogram.utils.deep_linking import create_start_link
 
-from loader import dp, db
+from loader import dp, db, bot
 from filters import ChatTypeFilter
 from states import RegisterQRCodeStates
 from keyboards.default import participant_menu, location_markup, setting_markup, language_markup, information_markup
@@ -125,28 +127,75 @@ async def about_concurs(message: Message):
     if info:
         if lang == 'uz':
             formatted_message = (
-                f"🏆 **Konkurs Haqida**\n\n"
-                f"**{info['title_uz']}**\n\n"
-                f"**Tavsifi:** {info['description_uz']}\n"
+                f"🏆 <b>Konkurs Haqida</b>\n\n"
+                f"<b>{info['title_uz']}</b>\n\n"
+                f"<b>Tavsifi:</b> {info['description_uz']}\n"
             )
         else:
             formatted_message = (
-                f"🏆 **О конкурсе**\n\n"
-                f"**{info['title_ru']}**\n\n"
-                f"**Описание:** {info['description_ru']}\n"
+                f"🏆 <b>О конкурсе</b>\n\n"
+                f"<b>{info['title_ru']}</b>\n\n"
+                f"<b>Описание:</b> {info['description_ru']}\n"
             )
-
-        # Yuboriladigan xabar
-        await message.answer(formatted_message, parse_mode='Markdown')
 
         # Rasmni yuborish
         if info['image_url']:
-            await message.answer_photo(info['image_url'])
+            try:
+                await message.answer_photo(info['image_url'], caption=formatted_message, parse_mode='Markdown')
+            except TelegramBadRequest:
+                await message.answer(formatted_message)
+        else:
+            await message.answer(formatted_message)
     else:
         if lang == 'uz':
             formatted_message = "❌ Konkurs haqidagi ma'lumot topilmadi."
         else:
             formatted_message = "❌ Информация о конкурсе не найдена."
 
-        await message.answer(formatted_message, parse_mode='Markdown')
+        await message.answer(formatted_message)
 
+
+# ---------------------------- My points menu --------------------------------------------------------
+
+@dp.message(ChatTypeFilter('private'), State(None), lambda msg: msg.text in ["💎 Mening ballarim", "💎 Мои баллы"])
+async def my_points(message: Message):
+    lang = 'uz' if message.text == "💎 Mening ballarim" else 'ru'
+    TEXTS = {
+        'uz': "Siz {number} ta do'stingizni taklif qilgansiz.\n\n💎 Sizning ballaringiz: {points}",
+        'ru': "Вы пригласили {number} друзей.\n\n💎 Ваши баллы: {points}"
+    }
+    result = await db.get_participant_points(message.from_user.id)
+    number = result['number']
+    await message.answer(TEXTS[lang].format(number=number, points=number*5))
+
+
+# --------------------------- My friends menu --------------------------------------------------------
+
+@dp.message(ChatTypeFilter('private'), State(None), lambda msg: msg.text in ["👥 Do'stlarni taklif qilish", "👥 Пригласить друзей"])
+async def invite_friends(message: Message):
+    lang = 'uz' if message.text == "👥 Do'stlarni taklif qilish" else 'ru'
+    info = await db.get_game_info()
+    link = await create_start_link(bot, f'{message.from_user.id}', encode=True)
+    if info:
+        if lang == 'uz':
+            formatted_message = (
+                f"🏆 <b>Konkurs Haqida</b>\n\n"
+                f"<b>{info['title_uz']}</b>\n\n"
+                f"{info['description_uz']}\n\n"
+                "Konkursda ishtirok etish: <a href='{link}'>Konkursga o'tish</a>"
+            )
+        else:
+            formatted_message = (
+                f"🏆 <b>О конкурсе</b>\n\n"
+                f"<b>{info['title_ru']}</b>\n\n"
+                f"{info['description_ru']}\n\n"
+                "Участие в конкурсе: <a href='{link}'>Перейти к конкурсу</a>"
+            )
+    else:
+        if lang == 'uz':
+            formatted_message = ("Salom, bizning 🏆 sovrunli konkursimizda qatnashishni istaysizmi?\n\n"
+                                 "Unda bizga qo'shiling.\n👉 <a href='{link}'>Konkursga o'tish</a>")
+        else:
+            formatted_message = ("Привет, хотите принять участие в нашем 🏆 призовом конкурсе?\n\n"
+                                 "Тогда присоединяйтесь к нам.\n👉 <a href='{link}'>Перейти к конкурсу</a>")
+    await message.answer(formatted_message.format(link=link))

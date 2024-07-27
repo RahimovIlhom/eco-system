@@ -241,6 +241,12 @@ class Database:
         sql = "UPDATE participants SET fullname = %s WHERE tg_id = %s"
         await self.execute(sql, (fullname, tg_id))
 
+    async def get_participant_points(self, tg_id):
+        sql = """
+        SELECT COUNT(*) AS number FROM participants WHERE suggested_id = %s
+        """
+        return await self.execute(sql, (tg_id,), fetchone=True)
+
     async def get_participant_qr_codes(self, tg_id):
         sql = """
         SELECT 

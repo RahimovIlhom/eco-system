@@ -200,5 +200,6 @@ async def add_fullname(message: Message, state: FSMContext):
                 'ru': "Главное меню",
             }
             await message.answer(TEXTS[lang], reply_markup=await participant_menu(lang))
+        await state.clear()
 
 # ----------------------------- End add participant -------------------------------------------------

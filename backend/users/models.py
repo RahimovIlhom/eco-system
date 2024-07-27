@@ -45,6 +45,7 @@ class Participant(models.Model):
     language = models.CharField(max_length=2, choices=LANGUAGES, default='uz')
     fullname = models.CharField(max_length=255)
     phone = models.CharField(max_length=25)
+    suggested = models.ForeignKey('Participant', on_delete=models.SET_NULL, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
