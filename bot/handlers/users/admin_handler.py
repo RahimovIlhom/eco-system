@@ -281,11 +281,6 @@ async def game_panel(message: Message):
     await message.answer(message.text, reply_markup=await games_menu(lang))
 
 
-@dp.message(ChatTypeFilter('private'), AdminFilter(), lambda msg: msg.text in ["🏆 Konkurslar", "🏆 Конкурсы"])
-async def game_list_panel(message: Message):
-    pass
-
-
 @dp.message(ChatTypeFilter('private'), AdminFilter(), lambda msg: msg.text in ["➕ Konkurs qo'shish", "➕ Добавить конкурс"])
 async def game_panel(message: Message, state: FSMContext):
     lang = 'uz' if message.text == "➕ Konkurs qo'shish" else 'ru'

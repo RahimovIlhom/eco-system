@@ -191,6 +191,38 @@ class Database:
         """
         await self.execute(sql, (game_name_uz, game_name_uz, game_name_ru, 'N/A', 'N/A', 'N/A', None, None, 'pending', datetime.now(), datetime.now()))
 
+    async def get_game(self, id):
+        sql = """
+        SELECT id, name_uz, name_ru, description_uz, description_ru, start_date, end_date, status
+        FROM games
+        WHERE id = %s
+        """
+        return await self.execute(sql, (id, ), fetchone=True)
+
+    async def update_game_status(self, id, status):
+        if status == 'active':
+            sql = """
+            UPDATE games SET status = %s, start_date = %s WHERE id = %s
+            """
+            await self.execute(sql, (status, datetime.now().date(), id))
+        elif status == 'completed':
+            sql = """
+            UPDATE games SET status = %s, end_date = %s WHERE id = %s
+            """
+            await self.execute(sql, (status, datetime.now().date(), id))
+        else:
+            sql = """
+            UPDATE games SET status = %s WHERE id = %s
+            """
+            await self.execute(sql, (status, id))
+
+    async def get_games(self):
+        sql = """
+        SELECT id, name_uz, name_ru, status
+        FROM games
+        """
+        return await self.execute(sql, fetchall=True)
+
     async def get_active_games(self):
         sql = """
         SELECT id, name_uz, name_ru, description, start_date, end_date, status, created_at, updated_at
