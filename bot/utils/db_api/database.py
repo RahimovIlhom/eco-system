@@ -224,14 +224,14 @@ class Database:
         """
         return await self.execute(sql, (tg_id,), fetchone=True)
 
-    async def add_participant(self, tg_id, language, fullname, phone, *args, **kwargs):
+    async def add_participant(self, tg_id, language, fullname, phone, payload=None, *args, **kwargs):
         sql = """
         INSERT INTO participants
-        (tg_id, language, fullname, phone, created_at, updated_at)
+        (tg_id, language, fullname, phone, suggested_id, created_at, updated_at)
         VALUES
-        (%s, %s, %s, %s, %s, %s)
+        (%s, %s, %s, %s, %s, %s, %s)
         """
-        await self.execute(sql, (tg_id, language, fullname, phone, datetime.now(), datetime.now()))
+        await self.execute(sql, (tg_id, language, fullname, phone, payload, datetime.now(), datetime.now()))
 
     async def participant_set_language(self, tg_id, language: str) -> None:
         sql = "UPDATE participants SET language = %s WHERE tg_id = %s"

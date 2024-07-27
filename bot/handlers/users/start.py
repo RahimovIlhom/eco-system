@@ -3,6 +3,7 @@ from aiogram.filters import CommandStart, CommandObject
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State
 from aiogram.types import Message
+from aiogram.utils.payload import decode_payload
 
 from loader import dp, db
 from keyboards.default import language_markup, admin_menu, employee_menu, participant_menu
@@ -43,12 +44,18 @@ async def employee_start(message: types.Message, state: FSMContext):
 async def participant_start_link(message: Message, command: CommandObject, state: FSMContext):
     await state.clear()
     args = command.args
+    try:
+        code = ''
+        payload = decode_payload(args)
+    except UnicodeDecodeError:
+        code = args
+        payload = ''
     user = await db.get_participant(message.from_user.id)
 
     if user:
-        await handle_existing_user(message, state, user, args)
+        await handle_existing_user(message, state, user, code)
     else:
-        await handle_new_user(message, state, args)
+        await handle_new_user(message, state, code, payload)
 
 
 @dp.message(ChatTypeFilter('private'), CommandStart())
@@ -62,19 +69,21 @@ async def participant_start(message: types.Message, state: FSMContext):
         await register_user(message, state)
 
 
-async def handle_existing_user(message: Message, state: FSMContext, user: dict, args: str = ''):
-    if args:
+async def handle_existing_user(message: Message, state: FSMContext, user: dict, code: str = ''):
+    if code:
         await state.set_state(State('register_qr_code'))
-        await state.update_data(code=args)
+        await state.update_data(code=code)
         await register_qr_code(message, state, user['language'])
     else:
         await send_main_menu(message, user['language'])
 
 
-async def handle_new_user(message: Message, state: FSMContext, args: str = ''):
+async def handle_new_user(message: Message, state: FSMContext, code: str = '', payload: str = ''):
     await state.set_state(AddParticipantStates.language)
-    if args:
-        await state.update_data(code=args)
+    if code:
+        await state.update_data(code=code)
+    elif payload:
+        await state.update_data(payload=payload)
     await register_user(message, state)
 
 

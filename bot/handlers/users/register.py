@@ -64,7 +64,7 @@ async def register_qr_code(message, state, lang):
         await state.clear()
 
 
-@dp.message(ChatTypeFilter('private'), State('qr_code_location'), lambda msg: msg.content_type == ContentType.LOCATION)
+@dp.message(State('qr_code_location'), lambda msg: msg.content_type == ContentType.LOCATION)
 async def add_qr_code_location(message: Message, state: FSMContext):
     location = message.location
     data = await state.get_data()
@@ -200,6 +200,6 @@ async def add_fullname(message: Message, state: FSMContext):
                 'ru': "Главное меню",
             }
             await message.answer(TEXTS[lang], reply_markup=await participant_menu(lang))
-        await state.clear()
+            await state.clear()
 
 # ----------------------------- End add participant -------------------------------------------------
