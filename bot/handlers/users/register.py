@@ -113,8 +113,8 @@ async def add_qr_code_location(message: Message, state: FSMContext):
 
 
 async def register_user(message, state):
-    await message.answer(f"Assalomu alaykum, hurmatli {message.from_user.full_name} EcoSystem botiga xush kelibsiz!\n"
-                         f"Здравствуйте, уважаемый {message.from_user.full_name}, добро пожаловать в EcoSystem бот!\n\n"
+    await message.answer(f"Assalomu alaykum, hurmatli {message.from_user.full_name} Eko Bak Ban botiga xush kelibsiz!\n"
+                         f"Здравствуйте, уважаемый {message.from_user.full_name}, добро пожаловать в Eko Bak Ban бот!\n\n"
                          f"Iltimos, tilni tanlang / Пожалуйста, выберите язык.", reply_markup=await language_markup())
 
 
