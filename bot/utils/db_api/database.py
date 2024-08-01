@@ -43,8 +43,15 @@ class Database:
                     return tuple(dict(row) for row in result) if result else ()
 
     async def get_employees(self) -> tuple:
-        sql = "SELECT tg_id, language, eco_branch_id, fullname, phone, inn, created_at FROM eco_branch_employees"
+        sql = ("SELECT employees.tg_id, employees.language, employees.eco_branch_id, employees.fullname, employees.phone, employees.inn, employees.created_at "
+               "FROM eco_branch_employees AS employees")
         return await self.execute(sql, fetchall=True)
+
+    async def get_employees_by_branch(self, eco_branch_id) -> tuple:
+        sql = ("SELECT employees.tg_id, employees.fullname, employees.phone "
+               "FROM eco_branch_employees AS employees "
+               "WHERE employees.eco_branch_id = %s")
+        return await self.execute(sql, (eco_branch_id,), fetchall=True)
 
     async def get_employee(self, tg_id) -> dict:
         sql = ("SELECT tg_id, language, eco_branch_id, fullname, phone, inn, created_at "
@@ -58,6 +65,10 @@ class Database:
                "(%s, %s, %s, %s, %s, %s, %s, %s)")
         await self.execute(sql, (tg_id, 'uz', eco_branch_id, fullname, phone,
                                  datetime.now(), datetime.now(), None))
+
+    async def remove_employee(self, tg_id) -> None:
+        sql = "DELETE FROM eco_branch_employees WHERE tg_id = %s"
+        await self.execute(sql, (tg_id,))
 
     async def employee_set_language(self, tg_id, language: str) -> None:
         sql = "UPDATE eco_branch_employees SET language = %s WHERE tg_id = %s"
@@ -81,6 +92,8 @@ class Database:
             eb.id,
             eb.name_uz,
             eb.name_ru,
+            eb.chief_name,
+            eb.phone,
             eb.address_id,
             eb.location_id,
             eb.start_time,
@@ -89,10 +102,14 @@ class Database:
             eb.information,
             eb.created_at,
             eb.updated_at,
+            eb.is_active,
             l.latitude,
-            l.longitude
+            l.longitude,
+            a.address_uz,
+            a.address_ru
         FROM eco_branches eb
         JOIN locations l ON eb.location_id = l.id
+        JOIN addresses a ON eb.address_id = a.id
         WHERE eb.id = %s
         """
         return await self.execute(sql, (branch_id,), fetchone=True)
@@ -110,12 +127,13 @@ class Database:
             working_days,
             information,
             created_at,
-            updated_at
+            updated_at,
+            is_active
         FROM eco_branches
         """
         return await self.execute(sql, fetchall=True)
 
-    async def add_branch(self, name_uz, name_ru, location: Location, *args, **kwargs):
+    async def add_branch(self, name_uz, name_ru, location: Location, phone: str, chief_name: str, *args, **kwargs):
         from utils import get_location_details
         await self.add_location(location)  # add new location
         location_id = (await self.get_location_by_coordinates(location))['id']
@@ -124,13 +142,44 @@ class Database:
         address_id = (await self.get_address_by_datas(**address_dict))['id']
         sql = """
         INSERT INTO eco_branches
-        (name, name_uz, name_ru, address_id, location_id, start_time, end_time, working_days, 
-        information, information_uz, information_ru, created_at, updated_at)
+        (name, name_uz, name_ru, chief_name, phone, address_id, location_id, start_time, end_time, working_days, 
+        information, information_uz, information_ru, created_at, updated_at, is_active)
         VALUES
-        (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, TRUE)
         """
-        await self.execute(sql, (name_uz, name_uz, name_ru, address_id, location_id, None, None, 'all_days',
+        await self.execute(sql, (name_uz, name_uz, name_ru, chief_name, phone, address_id, location_id, None, None, 'all_days',
                                  'N/A', 'N/A', 'N/A', datetime.now(), datetime.now()))
+
+    async def update_branch(self, branch_id, name_uz, name_ru, location, phone: str, chief_name: str, *args, **kwargs):
+        from utils import get_location_details
+        # Yangi joylashuvni qo'shish
+        await self.add_location(location)
+        location_id = (await self.get_location_by_coordinates(location))['id']
+
+        # Yangi manzilni qo'shish
+        address_dict = await get_location_details(location.latitude, location.longitude)
+        await self.add_address(**address_dict)
+        address_id = (await self.get_address_by_datas(**address_dict))['id']
+
+        # Filial ma'lumotlarini yangilash
+        sql = """
+        UPDATE eco_branches
+        SET name = %s, name_uz = %s, name_ru = %s, chief_name = %s, phone = %s, address_id = %s, location_id = %s, 
+            start_time = %s, end_time = %s, working_days = %s, information = %s, information_uz = %s, 
+            information_ru = %s, updated_at = %s
+        WHERE id = %s
+        """
+        # Ma'lumotlar bazasiga yangilanish uchun kerakli ma'lumotlarni yuborish
+        await self.execute(sql, (name_uz, name_uz, name_ru, chief_name, phone, address_id, location_id, None, None,
+                                 'all_days', 'N/A', 'N/A', 'N/A', datetime.now(), branch_id))
+
+    async def deactivate_eco_branch(self, branch_id):
+        sql = "UPDATE eco_branches SET is_active = FALSE WHERE id = %s"
+        await self.execute(sql, (branch_id,))
+
+    async def activate_eco_branch(self, branch_id):
+        sql = "UPDATE eco_branches SET is_active = TRUE WHERE id = %s"
+        await self.execute(sql, (branch_id,))
 
     async def add_location(self, location: Location):
         sql = """
@@ -151,16 +200,16 @@ class Database:
     async def add_address(self, country_uz, country_ru, state_uz, state_ru, city_uz, city_ru, county_uz, county_ru,
                           residential_uz, residential_ru, neighbourhood_uz, neighbourhood_ru, road_uz, road_ru,
                           house_number_uz, house_number_ru, amenity_uz, amenity_ru, shop_uz, shop_ru,
-                          man_made_uz, man_made_ru, postcode_uz, postcode_ru):
+                          man_made_uz, man_made_ru, postcode_uz, postcode_ru, address_uz, address_ru, *args, **kwargs):
         sql = """
         INSERT INTO addresses
         (country, country_uz, country_ru, state, state_uz, state_ru, city, city_uz, city_ru, 
         county, county_uz, county_ru, residential, residential_uz, residential_ru, neighbourhood, neighbourhood_uz, neighbourhood_ru, 
         road, road_uz, road_ru, house_number, house_number_uz, house_number_ru, amenity, amenity_uz, amenity_ru, 
-        shop, shop_uz, shop_ru, man_made, man_made_uz, man_made_ru, postcode, postcode_uz, postcode_ru)
+        shop, shop_uz, shop_ru, man_made, man_made_uz, man_made_ru, postcode, postcode_uz, postcode_ru, address, address_uz, address_ru)
         VALUES
         (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
-        %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
         await self.execute(sql,
                            (country_uz, country_uz, country_ru, state_uz, state_uz, state_ru, city_uz, city_uz, city_ru,
@@ -168,7 +217,7 @@ class Database:
                             neighbourhood_uz, neighbourhood_uz, neighbourhood_ru, road_uz, road_uz, road_ru,
                             house_number_uz, house_number_uz, house_number_ru, amenity_uz,
                             amenity_uz, amenity_ru, shop_uz, shop_uz, shop_ru, man_made_uz, man_made_uz, man_made_ru,
-                            postcode_uz, postcode_uz, postcode_ru))
+                            postcode_uz, postcode_uz, postcode_ru, address_uz, address_uz, address_ru))
 
     async def get_address_by_datas(self, country_uz, state_uz, city_uz, county_uz, residential_uz, neighbourhood_uz,
                                    road_uz, house_number_uz, amenity_uz, shop_uz, man_made_uz, postcode_uz, *args, **kwargs):

@@ -14,6 +14,7 @@ class Address(models.Model):
     shop = models.CharField(max_length=255)
     man_made = models.CharField(max_length=255)
     postcode = models.CharField(max_length=255)
+    address = models.TextField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.county}, {self.residential}, {self.house_number}"

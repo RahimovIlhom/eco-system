@@ -11,31 +11,18 @@ from filters import ChatTypeFilter, AdminFilter
 from keyboards.default import employees_menu, eco_branches_menu, games_menu
 from keyboards.inline import show_eco_branches, EcoBranchesCallbackData
 from states import AddEmployeeStates, AddBranchStates, AddGameStates
+from handlers.users.eco_branch_panel import eco_branch_detail_func
 
 
 # ----------------------- Employee panel ---------------------------------------------------------------------
-
-@dp.message(ChatTypeFilter('private'), AdminFilter(), State(None), lambda msg: msg.text in ["👤 Раздел сотрудников", "👤 Xodimlar bo'limi"])
-async def employee_panel(message: Message):
-    lang = 'ru' if message.text == "👤 Раздел сотрудников" else 'uz'
-    await message.answer(message.text, reply_markup=await employees_menu(lang))
-
-
-@dp.message(ChatTypeFilter('private'), AdminFilter(), lambda msg: msg.text in ["👤 Xodimlar", "👤 Сотрудники"])
-async def employee_list_panel(message: Message):
-    pass
-
-
-@dp.message(ChatTypeFilter('private'), AdminFilter(), State(None), lambda msg: msg.text in ["➕ Xodim qo'shish", "➕ Добавить сотрудника"])
-async def add_employee(message: Message, state: FSMContext):
-    lang = 'uz' if message.text == "➕ Xodim qo'shish" else 'ru'
+async def add_employee_handler(message: Message, state: FSMContext, branch_id=None, lang='uz'):
     TEXTS = {
         'uz': "Xodimning ism-familiyasini yuboring:",
         'ru': "Введите имя и фамилию вашего сотрудника:",
     }
     await message.answer(TEXTS[lang], reply_markup=ReplyKeyboardRemove())
     await state.set_state(AddEmployeeStates.fullname)
-    await state.set_data({'language': lang})
+    await state.set_data({'language': lang, 'eco_branch_id': branch_id})
 
 
 @dp.message(ChatTypeFilter('private'), AdminFilter(), AddEmployeeStates.fullname, lambda msg: msg.content_type == ContentType.TEXT)
@@ -68,47 +55,11 @@ async def err_add_employee_fullname(message: Message):
 
 @dp.message(ChatTypeFilter('private'), AdminFilter(), AddEmployeeStates.contact, lambda msg: msg.content_type == ContentType.CONTACT)
 async def add_employee_contact(message: Message, state: FSMContext):
-    data = await state.get_data()
-    lang = data['language']
     phone = message.contact.phone_number
     tg_id = message.contact.user_id
-    TEXTS = {
-        'uz': {
-            'next': "Xodim punktini tanlang:",
-            'already': ("❗️ Bu telegram kontakti allaqachon xodim sifatida roʻyxatdan oʻtgan!\nBoshqa kontaktni "
-                        "yuboring:")
-        },
-        'ru': {
-            'next': "Выберите отдел сотрудника:",
-            'already': "❗️ Этот телеграм-контакт уже зарегистрирован как сотрудник!\nОтправьте другой контакт: "
-        }
-    }
-    if await db.get_employee(tg_id):
-        return await message.answer(TEXTS[lang]['already'])
     await state.update_data(phone=phone, tg_id=tg_id)
-    await message.answer(TEXTS[lang]['next'], reply_markup=await show_eco_branches(lang))
-    await state.set_state(AddEmployeeStates.eco_branch)
-
-
-@dp.message(ChatTypeFilter('private'), AdminFilter(), AddEmployeeStates.contact, lambda msg: msg.content_type == ContentType.ANY)
-async def err_add_employee_contact(message: Message):
-    await message.delete()
-    data = await message.get_data()
-    lang = data['language']
-    TEXTS = {
-        'uz': "❗️ Iltimos, xodimning telegram kontaktini yuboring!",
-        'ru': "❗️ Пожалуйста, отправьте контакт сотрудника в Telegram!"
-    }
-    err_msg = await message.answer(TEXTS[lang])
-    await asyncio.sleep(2)
-    await err_msg.delete()
-
-
-@dp.callback_query(ChatTypeFilter('private'), AdminFilter(), AddEmployeeStates.eco_branch, EcoBranchesCallbackData.filter())
-async def end_add_employee(call: CallbackData, callback_data: EcoBranchesCallbackData, state: FSMContext):
     data = await state.get_data()
     lang = data['language']
-    data.update({'eco_branch_id': callback_data.branch_id})
     TEXTS = {
         'uz': {
             'success': "✅ Xodim muvaffaqiyatli ro'yxatdan o'tkazildi!",
@@ -125,25 +76,25 @@ async def end_add_employee(call: CallbackData, callback_data: EcoBranchesCallbac
     try:
         await db.add_employee(**data)  # TODO: add_employee() -> add_employee
     except Exception as e:
-        await call.message.edit_text(TEXTS[lang]['failed'] + f"\n\nerror: {e}", reply_markup=None)
+        await message.answer(TEXTS[lang]['failed'] + f"\n\nerror: {e}", reply_markup=None)
     else:
-        await call.message.edit_text(TEXTS[lang]['success'], reply_markup=None)
-    finally:
-        await call.message.answer(TEXTS[lang]['end'], reply_markup=await employees_menu(lang))
+        await eco_branch_detail_func(message, data.get('eco_branch_id'), lang)
+        await message.answer(TEXTS[lang]['success'], reply_markup=await employees_menu(lang))
 
 
-@dp.message(ChatTypeFilter('private'), AdminFilter(), AddEmployeeStates.eco_branch, lambda msg: msg.content_type == ContentType.ANY)
-async def err_add_employee_branch(message: Message):
+@dp.message(ChatTypeFilter('private'), AdminFilter(), AddEmployeeStates.contact, lambda msg: msg.content_type == ContentType.ANY)
+async def err_add_employee_contact(message: Message):
     await message.delete()
     data = await message.get_data()
     lang = data['language']
     TEXTS = {
-        'uz': "❗️ Iltimos, punktni tanlang!",
-        'ru': "❗️ Пожалуйста, выберите пункт!"
+        'uz': "❗️ Iltimos, xodimning telegram kontaktini yuboring!",
+        'ru': "❗️ Пожалуйста, отправьте контакт сотрудника в Telegram!"
     }
     err_msg = await message.answer(TEXTS[lang])
     await asyncio.sleep(2)
     await err_msg.delete()
+
 
 # ------------------------- End employee panel ---------------------------------------------------------------
 
@@ -156,13 +107,8 @@ async def eco_branch_panel(message: Message):
     await message.answer(message.text, reply_markup=await eco_branches_menu(lang))
 
 
-@dp.message(ChatTypeFilter('private'), AdminFilter(), lambda msg: msg.text in ["🏢 Punktlar", "🏢 Пункты"])
-async def eco_branch_list_panel(message: Message):
-    pass
-
-
 @dp.message(ChatTypeFilter('private'), AdminFilter(), lambda msg: msg.text in ["➕ Punkt qo'shish", "➕ Добавить пункт"])
-async def add_eco_branch(message: Message, state: FSMContext):
+async def add_or_edit_eco_branch(message: Message, state: FSMContext, branch_id: int = None, **kwargs):
     lang = 'ru' if message.text == "➕ Добавить пункт" else 'uz'
     TEXTS = {
         'uz': "🇺🇿 Punkt nomini o'zbek tilida yuboring:",
@@ -170,7 +116,7 @@ async def add_eco_branch(message: Message, state: FSMContext):
     }
     await message.answer(TEXTS[lang], reply_markup=ReplyKeyboardRemove())
     await state.set_state(AddBranchStates.name_uz)
-    await state.set_data({'language': lang})
+    await state.set_data({'language': lang, 'branch_id': branch_id})
 
 
 @dp.message(ChatTypeFilter('private'), AdminFilter(), AddBranchStates.name_uz, lambda msg: msg.content_type == ContentType.TEXT)
@@ -208,11 +154,11 @@ async def add_eco_branch_name(message: Message, state: FSMContext):
     name = message.text
     await state.update_data(name_ru=name)
     TEXTS = {
-        'uz': "📍 Punkt lokatsiyasini yuboring:",
-        'ru': "📍 Отправьте местоположение пункта:"
+        'uz': "Punkt egasining FIO sini yuboring:",
+        'ru': "Отправьте ФИО владельца пункта:"
     }
     await message.answer(TEXTS[lang])
-    await state.set_state(AddBranchStates.location)
+    await state.set_state(AddBranchStates.chief_name)
 
 
 @dp.message(ChatTypeFilter('private'), AdminFilter(), AddBranchStates.name_ru, lambda msg: msg.content_type == ContentType.ANY)
@@ -223,6 +169,62 @@ async def err_add_eco_branch_name(message: Message):
     TEXTS = {
         'uz': "❗️ Iltimos, punktni nomini yuboring!",
         'ru': "❗️ Пожалуйста, отправьте название пункта!"
+    }
+    err_msg = await message.answer(TEXTS[lang])
+    await asyncio.sleep(2)
+    await err_msg.delete()
+
+
+@dp.message(ChatTypeFilter('private'), AdminFilter(), AddBranchStates.chief_name, lambda msg: msg.content_type == ContentType.TEXT)
+async def add_eco_branch_chiefname(message: Message, state: FSMContext):
+    data = await state.get_data()
+    lang = data['language']
+    chief_name = message.text
+    await state.update_data(chief_name=chief_name)
+    TEXTS = {
+        'uz': "📞 Punktning telefon raqamini yuboring:",
+        'ru': "📞 Отправьте номер телефона пункта:"
+    }
+    await message.answer(TEXTS[lang])
+    await state.set_state(AddBranchStates.phone)
+
+
+@dp.message(ChatTypeFilter('private'), AdminFilter(), AddBranchStates.chief_name, lambda msg: msg.content_type == ContentType.ANY)
+async def err_add_eco_branch_chiefname(message: Message, state: FSMContext):
+    await message.delete()
+    data = await message.get_data()
+    lang = data['language']
+    TEXTS = {
+        'uz': "❗️ Iltimos, punkt egasining FIO sini yuboring!",
+        'ru': "❗️ Пожалуйста, отправьте ФИО владельца пункта!"
+    }
+    err_msg = await message.answer(TEXTS[lang])
+    await asyncio.sleep(2)
+    await err_msg.delete()
+
+
+@dp.message(ChatTypeFilter('private'), AdminFilter(), AddBranchStates.phone, lambda msg: msg.content_type == ContentType.TEXT)
+async def add_eco_branch_phone(message: Message, state: FSMContext):
+    data = await state.get_data()
+    lang = data['language']
+    phone = message.text
+    await state.update_data(phone=phone)
+    TEXTS = {
+        'uz': "📍 Punkt lokatsiyasini yuboring:",
+        'ru': "📍 Отправьте местоположение пункта:"
+    }
+    await message.answer(TEXTS[lang])
+    await state.set_state(AddBranchStates.location)
+
+
+@dp.message(ChatTypeFilter('private'), AdminFilter(), AddBranchStates.phone, lambda msg: msg.content_type == ContentType.ANY)
+async def err_add_eco_branch_phone(message: Message):
+    await message.delete()
+    data = await message.get_data()
+    lang = data['language']
+    TEXTS = {
+        'uz': "❗️ Iltimos, punktni telefon raqamini yuboring!",
+        'ru': "❗️ Пожалуйста, отправьте номер телефона пункта!"
     }
     err_msg = await message.answer(TEXTS[lang])
     await asyncio.sleep(2)
@@ -248,11 +250,14 @@ async def add_eco_branch_location(message: Message, state: FSMContext):
         }
     }
     try:
-        await db.add_branch(**data)  # TODO: add_branch() -> add_eco_branch
+        if data.get('branch_id', None):
+            await db.update_branch(**data)
+            await eco_branch_detail_func(message, data.get('branch_id'), lang)
+        else:
+            await db.add_branch(**data)  # TODO: add_branch() -> add_eco_branch
+            await message.answer(TEXTS[lang]['success'], reply_markup=None)
     except Exception as e:
         await message.answer(TEXTS[lang]['failed'] + f"\n\nerror: {e}", reply_markup=None)
-    else:
-        await message.answer(TEXTS[lang]['success'], reply_markup=None)
     await message.answer(TEXTS[lang]['end'], reply_markup=await eco_branches_menu(lang))
     await state.clear()
 
@@ -363,23 +368,3 @@ async def err_add_game_name_ru(message: Message):
     await err_msg.delete()
 
 # ------------------------- end Game panel ----------------------------------------------------------------
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

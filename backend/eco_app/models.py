@@ -13,6 +13,8 @@ WORKING_DAYS = (
 
 class EcoBranch(models.Model):
     name = models.CharField(max_length=255, null=True, blank=True)
+    chief_name = models.CharField(max_length=255, null=True, blank=True)
+    phone = models.CharField(max_length=25, null=True, blank=True)
     address = models.ForeignKey('address_app.Address', on_delete=models.SET_NULL, null=True, blank=True)
     location = models.ForeignKey('address_app.Location', on_delete=models.SET_NULL, null=True, blank=True)
     start_time = models.TimeField(null=True, blank=True)
@@ -21,6 +23,7 @@ class EcoBranch(models.Model):
     information = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    is_active = models.BooleanField(default=True)
 
     class Meta:
         db_table = 'eco_branches'

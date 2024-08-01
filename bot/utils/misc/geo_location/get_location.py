@@ -5,6 +5,7 @@ geolocator = Nominatim(user_agent="EcoSystemBot")
 
 async def get_location_details(latitude, longitude):
     location = geolocator.reverse((latitude, longitude), exactly_one=True, language='uz')
+    address_line = location.address
     address = location.raw['address']
     data = {
         'country_uz': address.get('country', 'N/A'),
@@ -19,8 +20,10 @@ async def get_location_details(latitude, longitude):
         'shop_uz': address.get('shop', 'N/A'),
         'man_made_uz': address.get('man_made', 'N/A'),
         'postcode_uz': address.get('postcode', 'N/A'),
+        'address_uz': address_line
     }
     location = geolocator.reverse((latitude, longitude), exactly_one=True, language='ru')
+    address_line = location.address
     address = location.raw['address']
     data.update({
         'country_ru': address.get('country', 'N/A'),
@@ -35,6 +38,7 @@ async def get_location_details(latitude, longitude):
         'shop_ru': address.get('shop', 'N/A'),
         'man_made_ru': address.get('man_made', 'N/A'),
         'postcode_ru': address.get('postcode', 'N/A'),
+        'address_ru': address_line
     })
 
     return data

@@ -6,11 +6,12 @@ async def admin_menu(lang: str = 'uz') -> ReplyKeyboardMarkup:
         keyboard=[
             [
                 KeyboardButton(text="🏆 Konkurs bo'limi" if lang == 'uz' else "🏆 Раздел конкурсов"),
-            ],
-            [
                 KeyboardButton(text="🏢 Punktlar bo'limi" if lang == 'uz' else "🏢 Раздел пунктов"),
-                KeyboardButton(text="👤 Xodimlar bo'limi" if lang == 'uz' else "👤 Раздел сотрудников"),
             ],
+            # [
+            #     KeyboardButton(text="🏢 Punktlar bo'limi" if lang == 'uz' else "🏢 Раздел пунктов"),
+            #     KeyboardButton(text="👤 Xodimlar bo'limi" if lang == 'uz' else "👤 Раздел сотрудников"),
+            # ],
             [
                 KeyboardButton(text="🌐 Tilni o'zgartirish" if lang == 'uz' else "🌐 Изменить язык")
             ],
