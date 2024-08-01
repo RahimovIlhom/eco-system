@@ -21,21 +21,21 @@ async def profile(message: Message):
 
         if lang == 'uz':
             formatted_message = (
-                f"👤 **Ishtirokchi Ma'lumotlari**\n"
-                f"🆔 **Telegram ID:** {profile_info['tg_id']}\n"
-                f"🌐 **Til:** {profile_info['language']}\n"
-                f"📛 **Ism-familiya:** {profile_info['fullname']}\n"
-                f"📞 **Telefon raqami:** {profile_info['phone']}\n"
-                f"🗓️ **Ro'yxatga olingan sana:** {formatted_created_at}\n"
+                f"👤 <b>Ishtirokchi Ma'lumotlari</b>\n"
+                f"🆔 <b>Telegram ID:</b> {profile_info['tg_id']}\n"
+                f"🌐 <b>Til:</b> {profile_info['language']}\n"
+                f"📛 <b>Ism-familiya:</b> {profile_info['fullname']}\n"
+                f"📞 <b>Telefon raqami:</b> {profile_info['phone']}\n"
+                f"🗓️ <b>Ro'yxatga olingan sana:</b> {formatted_created_at}\n"
             )
         else:
             formatted_message = (
-                f"👤 **Информация об участнике**\n"
-                f"🆔 **Telegram ID:** {profile_info['tg_id']}\n"
-                f"🌐 **Язык:** {profile_info['language']}\n"
-                f"📛 **Полное имя:** {profile_info['fullname']}\n"
-                f"📞 **Телефонный номер:** {profile_info['phone']}\n"
-                f"🗓️ **Дата регистрации:** {formatted_created_at}\n"
+                f"👤 <b>Информация об участнике</b>\n"
+                f"🆔 <b>Telegram ID:</b> {profile_info['tg_id']}\n"
+                f"🌐 <b>Язык:</b> {profile_info['language']}\n"
+                f"📛 <b>Полное имя:</b> {profile_info['fullname']}\n"
+                f"📞 <b>Телефонный номер:</b> {profile_info['phone']}\n"
+                f"🗓️ <b>Дата регистрации:</b> {formatted_created_at}\n"
             )
     else:
         if lang == 'uz':
@@ -43,7 +43,7 @@ async def profile(message: Message):
         else:
             formatted_message = "❌ Участник не найден."
 
-    await message.answer(formatted_message, parse_mode='Markdown')
+    await message.answer(formatted_message)
 
 
 # ------------------------- Start set name menu -----------------------------------------------------------
@@ -84,20 +84,20 @@ async def register_qr_codes_info(message: Message, state: FSMContext):
 
     if qr_codes:
         if lang == 'uz':
-            formatted_message = "📋 **Sizning QR kodlaringiz**\n\nUmumiy soni: " + str(len(qr_codes)) + "\n\n"
+            formatted_message = "📋 <b>Sizning QR kodlaringiz</b>\n\nUmumiy soni: " + str(len(qr_codes)) + "\n\n"
             for qr in qr_codes:
                 created_at = qr['created_at'].strftime("%H:%M, %d-%m-%Y")
                 formatted_message += (
-                    f"🆔 **QR kod:** {qr['code'].upper()}\n"
-                    f"🗓️ **Ro'yxatga olingan sana:** {created_at}\n\n"
+                    f"🆔 <b>QR kod:</b> {qr['code'].upper()}\n"
+                    f"🗓️ <b>Ro'yxatga olingan sana:</b> {created_at}\n\n"
                 )
         else:
-            formatted_message = "📋 **Ваши QR-коды**\n\nВсего: " + str(len(qr_codes)) + "\n\n"
+            formatted_message = "📋 <b>Ваши QR-коды</b>\n\nВсего: " + str(len(qr_codes)) + "\n\n"
             for qr in qr_codes:
                 created_at = qr['created_at'].strftime("%H:%M, %d-%m-%Y")
                 formatted_message += (
-                    f"🆔 **QR код:** {qr['code'].upper()}\n"
-                    f"🗓️ **Дата регистрации:** {created_at}\n\n"
+                    f"🆔 <b>QR код:</b> {qr['code'].upper()}\n"
+                    f"🗓️ <b>Дата регистрации:</b> {created_at}\n\n"
                 )
     else:
         if lang == 'uz':
@@ -105,4 +105,4 @@ async def register_qr_codes_info(message: Message, state: FSMContext):
         else:
             formatted_message = "❌ Ваши QR-коды не найдены."
 
-    await message.answer(formatted_message, parse_mode='Markdown')
+    await message.answer(formatted_message)

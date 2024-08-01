@@ -61,6 +61,9 @@ async def games_menu(lang: str = 'uz') -> ReplyKeyboardMarkup:
                 KeyboardButton(text="➕ Konkurs qo'shish" if lang == 'uz' else "➕ Добавить конкурс"),
             ],
             [
+                KeyboardButton(text="ℹ️ Konkurs haqida ma'lumot kiritish" if lang == 'uz' else "ℹ️ Ввести информацию о конкурсе"),
+            ],
+            [
                 KeyboardButton(text="🔙 Orqaga" if lang == 'uz' else "🔙 Назад")
             ]
         ],

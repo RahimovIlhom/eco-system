@@ -379,6 +379,15 @@ class Database:
         """
         await self.execute(sql, (qrcode_id,))
 
+    async def add_game_infos(self, title_uz, title_ru, description_uz, description_ru, image_url, *args, **kwargs):
+        sql = """
+        INSERT INTO game_infos
+        (title, title_uz, title_ru, description, description_uz, description_ru, image_url)
+        VALUES
+        (%s, %s, %s, %s, %s, %s, %s)
+        """
+        await self.execute(sql, (title_uz, title_uz, title_ru, description_uz, description_uz, description_ru, image_url))
+
     async def get_game_info(self):
         sql = """
         SELECT id, title_uz, title_ru, description_uz, description_ru, image_url

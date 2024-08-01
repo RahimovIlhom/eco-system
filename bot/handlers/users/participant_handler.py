@@ -141,16 +141,16 @@ async def about_concurs(message: Message):
         # Rasmni yuborish
         if info['image_url']:
             try:
-                await message.answer_photo(info['image_url'], caption=formatted_message, parse_mode='Markdown')
+                await message.answer_photo(info['image_url'], caption=formatted_message)
             except TelegramBadRequest:
                 await message.answer(formatted_message)
         else:
             await message.answer(formatted_message)
     else:
         if lang == 'uz':
-            formatted_message = "❌ Konkurs haqidagi ma'lumot topilmadi."
+            formatted_message = "❌ Konkurs haqidagi ma'lumot mavjud emas."
         else:
-            formatted_message = "❌ Информация о конкурсе не найдена."
+            formatted_message = "❌ Информация о конкурсе отсутствует."
 
         await message.answer(formatted_message)
 
@@ -179,14 +179,12 @@ async def invite_friends(message: Message):
     if info:
         if lang == 'uz':
             formatted_message = (
-                f"🏆 <b>Konkurs Haqida</b>\n\n"
                 f"<b>{info['title_uz']}</b>\n\n"
                 f"{info['description_uz']}\n\n"
                 "Konkursda ishtirok etish: <a href='{link}'>Konkursga o'tish</a>"
             )
         else:
             formatted_message = (
-                f"🏆 <b>О конкурсе</b>\n\n"
                 f"<b>{info['title_ru']}</b>\n\n"
                 f"{info['description_ru']}\n\n"
                 "Участие в конкурсе: <a href='{link}'>Перейти к конкурсу</a>"
