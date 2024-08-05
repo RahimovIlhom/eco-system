@@ -1,3 +1,5 @@
+from concurrent.futures import ThreadPoolExecutor
+
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from drf_yasg import openapi
@@ -11,6 +13,7 @@ from .models import EcoBranchEmployee, RegisteredQRCode
 from .serializers import (EmployeesListSerializer, RegisteredQRCodesListSerializer, WinnersListSerializer,
                           WinnerDetailSerializer)
 from game_app.models import Game, QRCode
+from utils import send_message
 
 
 class EmployeesListAPIView(generics.ListAPIView):
@@ -86,6 +89,11 @@ class WinnersListAPIView(generics.ListAPIView):
         return Response(serializer.data)
 
 
+def send_message_async(chat_id, game_name, lang: str = 'uz'):
+    with ThreadPoolExecutor() as executor:
+        executor.submit(send_message, chat_id, game_name, lang)
+
+
 @method_decorator(csrf_exempt, name='dispatch')
 class CreateWinnerAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -132,6 +140,10 @@ class CreateWinnerAPIView(APIView):
 
         if registered_qrcode.winner:
             return Response({"detail": "Bunday ID da ro'yxatdan o'tkazilgan QR kod allaqchon yutuq egasi!"}, status=status.HTTP_400_BAD_REQUEST)
+
+        participant = registered_qrcode.participant
+        game_name = registered_qrcode.qrcode.game.name_uz if participant.language == 'uz' else registered_qrcode.qrcode.game.name_ru
+        send_message_async(participant.tg_id, game_name=game_name, lang=participant.language)
 
         registered_qrcode.winner = True
         registered_qrcode.save()

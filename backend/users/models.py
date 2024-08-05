@@ -71,3 +71,29 @@ class RegisteredQRCode(models.Model):
 
     class Meta:
         db_table = 'registered_qrcodes'
+
+
+CARD_TYPES = (
+    ('uzcard', 'Uzcard'),
+    ('humo', 'Humo'),
+)
+
+
+class PlasticCard(models.Model):
+    participant = models.ForeignKey('users.Participant', on_delete=models.CASCADE)
+    card_type = models.CharField(max_length=15, choices=CARD_TYPES, default='uzcard')
+    card_number = models.BinaryField()
+    card_date = models.DateField(null=True, blank=True)
+    card_cvv = models.CharField(max_length=3, null=True, blank=True)
+    bank_name = models.CharField(max_length=255, null=True, blank=True)
+    card_image = models.ImageField(upload_to='card_images', null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    objects = models.Manager()
+
+    def __str__(self):
+        return f"{self.participant} - {self.card_type}"
+
+    class Meta:
+        db_table = 'plastic_cards'

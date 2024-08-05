@@ -4,6 +4,8 @@ import aiomysql
 from aiogram.types import Location
 from environs import Env
 
+from utils.misc.crypto_encryption import encrypt_data
+
 env = Env()
 env.read_env()
 
@@ -395,3 +397,33 @@ class Database:
         ORDER BY id DESC
         """
         return await self.execute(sql, fetchone=True)
+
+    async def add_plastic_card(self, tg_id, card_type, card_number, *args, **kwargs):
+        card_number = await encrypt_data(card_number)
+        if await self.get_plastic_card(tg_id):
+            sql = """
+            UPDATE plastic_cards
+            SET card_type = %s, card_number = %s, updated_at = %s
+            WHERE participant_id = %s
+            """
+            await self.execute(sql, (card_type, card_number, datetime.now(), tg_id))
+        else:
+            sql = """
+            INSERT INTO plastic_cards
+            (participant_id, card_type, card_number, created_at, updated_at)
+            VALUES
+            (%s, %s, %s, %s, %s)
+            """
+            await self.execute(sql, (tg_id, card_type, card_number, datetime.now(), datetime.now()))
+
+    async def get_plastic_card(self, tg_id):
+        sql = """
+        SELECT card_type, card_number, created_at, updated_at FROM plastic_cards WHERE participant_id = %s
+        """
+        return await self.execute(sql, (tg_id,), fetchone=True)
+
+    async def remove_plastic_card(self, tg_id):
+        sql = """
+        DELETE FROM plastic_cards WHERE participant_id = %s
+        """
+        await self.execute(sql, (tg_id,))

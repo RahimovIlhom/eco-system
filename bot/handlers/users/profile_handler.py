@@ -21,19 +21,19 @@ async def profile(message: Message):
 
         if lang == 'uz':
             formatted_message = (
-                f"👤 <b>Ishtirokchi Ma'lumotlari</b>\n"
+                f"<b>Ishtirokchi Ma'lumotlari</b>\n\n"
                 f"🆔 <b>Telegram ID:</b> {profile_info['tg_id']}\n"
                 f"🌐 <b>Til:</b> {profile_info['language']}\n"
-                f"📛 <b>Ism-familiya:</b> {profile_info['fullname']}\n"
+                f"👤 <b>Ism-familiya:</b> {profile_info['fullname']}\n"
                 f"📞 <b>Telefon raqami:</b> {profile_info['phone']}\n"
                 f"🗓️ <b>Ro'yxatga olingan sana:</b> {formatted_created_at}\n"
             )
         else:
             formatted_message = (
-                f"👤 <b>Информация об участнике</b>\n"
+                f"<b>Информация об участнике</b>\n\n"
                 f"🆔 <b>Telegram ID:</b> {profile_info['tg_id']}\n"
                 f"🌐 <b>Язык:</b> {profile_info['language']}\n"
-                f"📛 <b>Полное имя:</b> {profile_info['fullname']}\n"
+                f"👤 <b>Полное имя:</b> {profile_info['fullname']}\n"
                 f"📞 <b>Телефонный номер:</b> {profile_info['phone']}\n"
                 f"🗓️ <b>Дата регистрации:</b> {formatted_created_at}\n"
             )

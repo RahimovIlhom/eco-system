@@ -9,6 +9,7 @@ async def information_markup(lang: str = 'uz') -> ReplyKeyboardMarkup:
                 KeyboardButton(text="✏️ Ismni o'zgartirish" if lang == 'uz' else "✏️ Изменить имя"),
             ],
             [
+                KeyboardButton(text="💳 Mening kartam" if lang == 'uz' else "💳 Мои карты"),
                 KeyboardButton(text="🗂 QR kodlarim" if lang == 'uz' else "🗂 Мои QR-коды"),
             ],
             [
