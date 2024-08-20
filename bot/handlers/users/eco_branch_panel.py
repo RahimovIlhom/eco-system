@@ -1,11 +1,12 @@
 from typing import Union
 
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
 
 from filters import ChatTypeFilter, AdminFilter
-from loader import dp, db
+from loader import dp, db, bot
 from keyboards.inline import eco_branches_inlines, EcoBranchCallbackData, eco_branch_detail, get_employees_inlines_by_branch
+from keyboards.default import employee_menu
 
 
 @dp.message(ChatTypeFilter('private'), AdminFilter(), lambda msg: msg.text in ["🏢 Punktlar", "🏢 Пункты"])
@@ -60,7 +61,8 @@ async def eco_branch_detail_func(call, branch_id, lang):
             f"🕒 Ish vaqti: {eco_branch['start_time']} - {eco_branch['end_time']}\n"
             f"📅 Ish kunlari: {eco_branch['working_days']}\n"
             f"📍 Koordinatalar: {eco_branch['latitude']}, {eco_branch['longitude']}\n"
-            f"ℹ️ Ma'lumot: {eco_branch['information']}\n\n"
+            f"ℹ️ Ma'lumot: {eco_branch['information']}\n"
+            f"⏳  Aktivlik vaqti: {eco_branch['activity_time'].strftime('%H:%M, %d-%m-%Y, %A')}\n\n"
             f"Holat: {'🟢 Aktiv' if eco_branch['is_active'] else '🔴 Noaktiv'}"
         )
         if employees:
@@ -76,7 +78,8 @@ async def eco_branch_detail_func(call, branch_id, lang):
             f"🕒 Время работы: {eco_branch['start_time']} - {eco_branch['end_time']}\n"
             f"📅 Рабочие дни: {eco_branch['working_days']}\n"
             f"📍 Координаты: {eco_branch['latitude']}, {eco_branch['longitude']}\n"
-            f"ℹ️ Информация: {eco_branch['information']}\n\n"
+            f"ℹ️ Информация: {eco_branch['information']}\n"
+            f"⏳  Время активности: {eco_branch['activity_time'].strfftime('%H:%M, %d-%m-%Y, %A')}\n\n"
             f"Статус: {'🟢 Активен' if eco_branch['is_active'] else '🔴 Неактивен'}"
         )
         if employees:
@@ -93,12 +96,28 @@ async def deactivate_eco_branch_func(call, branch_id, lang):
     await db.deactivate_eco_branch(branch_id)
     await eco_branch_detail_func(call, branch_id, lang)
     await call.message.answer("✅ Eko punkt aktivsizlantirildi!" if lang == 'uz' else "✅ Eko пункт был деактивирован!")
+    MESSAGES = {
+        'uz': "Eko punkt aktivsiztirildi!",
+        'ru': "Эко пункт был деактивирован!"
+    }
+    employees = await db.get_employees_by_eco_branch(branch_id)
+    if employees:
+        for emp in employees:
+            await bot.send_message(emp['chat_id'], MESSAGES[emp['lang']], reply_markup=ReplyKeyboardRemove())
 
 
 async def activate_eco_branch_func(call, branch_id, lang):
     await db.activate_eco_branch(branch_id)
     await eco_branch_detail_func(call, branch_id, lang)
+    MESSAGES = {
+        'uz': "Eko punkt muvaffaqiyatli aktivlashtirildi!",
+        'ru': "Еко пункт был успешно активирован!",
+    }
     await call.message.answer("✅ Eko punkt muvaffaqiyatli aktivlashtirildi!" if lang == 'uz' else "✅ Eko пункт был успешно активирован!")
+    employees = await db.get_employees_by_eco_branch(branch_id)
+    if employees:
+        for emp in employees:
+            await bot.send_message(emp['chat_id'], MESSAGES[emp['lang']], reply_markup=await employee_menu(emp['lang']))
 
 
 async def edit_eco_branch_func(call, branch_id, lang, state: FSMContext = None):

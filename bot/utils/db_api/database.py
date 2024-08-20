@@ -1,6 +1,7 @@
 from datetime import datetime
 
 import aiomysql
+import pytz
 from aiogram.types import Location
 from environs import Env
 
@@ -8,6 +9,8 @@ from utils.misc.crypto_encryption import encrypt_data
 
 env = Env()
 env.read_env()
+
+tashkent_tz = pytz.timezone('Asia/Tashkent')
 
 
 class Database:
@@ -56,9 +59,30 @@ class Database:
         return await self.execute(sql, (eco_branch_id,), fetchall=True)
 
     async def get_employee(self, tg_id) -> dict:
-        sql = ("SELECT tg_id, language, eco_branch_id, fullname, phone, inn, created_at "
-               "FROM eco_branch_employees WHERE tg_id = %s")
+        sql = """
+            SELECT 
+                employees.tg_id, 
+                employees.language, 
+                employees.eco_branch_id, 
+                employees.fullname, 
+                employees.phone, 
+                employees.inn, 
+                employees.created_at,
+                branches.name AS branch_name,
+                branches.phone AS branch_phone,
+                branches.is_active AS branch_is_active,
+                branches.activity_time AS branch_activity_time
+            FROM eco_branch_employees AS employees
+            LEFT JOIN eco_branches AS branches ON employees.eco_branch_id = branches.id
+            WHERE employees.tg_id = %s
+        """
         return await self.execute(sql, (tg_id,), fetchone=True)
+
+    async def get_employees_by_eco_branch(self, eco_branch_id) -> tuple:
+        sql = ("SELECT employees.tg_id AS chat_id, employees.language AS lang "
+               "FROM eco_branch_employees AS employees "
+               "WHERE employees.eco_branch_id = %s")
+        return await self.execute(sql, (eco_branch_id,), fetchall=True)
 
     async def add_employee(self, tg_id, eco_branch_id, fullname, phone, *args, **kwargs) -> None:
         sql = ("INSERT INTO eco_branch_employees "
@@ -66,7 +90,7 @@ class Database:
                "VALUES "
                "(%s, %s, %s, %s, %s, %s, %s, %s)")
         await self.execute(sql, (tg_id, 'uz', eco_branch_id, fullname, phone,
-                                 datetime.now(), datetime.now(), None))
+                                 datetime.now(tz=tashkent_tz), datetime.now(tz=tashkent_tz), None))
 
     async def remove_employee(self, tg_id) -> None:
         sql = "DELETE FROM eco_branch_employees WHERE tg_id = %s"
@@ -105,6 +129,7 @@ class Database:
             eb.created_at,
             eb.updated_at,
             eb.is_active,
+            eb.activity_time,
             l.latitude,
             l.longitude,
             a.address_uz,
@@ -145,12 +170,14 @@ class Database:
         sql = """
         INSERT INTO eco_branches
         (name, name_uz, name_ru, chief_name, phone, address_id, location_id, start_time, end_time, working_days, 
-        information, information_uz, information_ru, created_at, updated_at, is_active)
+        information, information_uz, information_ru, created_at, updated_at, is_active, activity_time)
         VALUES
-        (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, TRUE)
+        (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, TRUE, %s)
         """
+        next_month = datetime.now(tz=tashkent_tz).month + 1
         await self.execute(sql, (name_uz, name_uz, name_ru, chief_name, phone, address_id, location_id, None, None, 'all_days',
-                                 'N/A', 'N/A', 'N/A', datetime.now(), datetime.now()))
+                                 'N/A', 'N/A', 'N/A', datetime.now(tz=tashkent_tz), datetime.now(tz=tashkent_tz),
+                                 datetime.now(tz=tashkent_tz).replace(month=next_month)))
 
     async def update_branch(self, branch_id, name_uz, name_ru, location, phone: str, chief_name: str, *args, **kwargs):
         from utils import get_location_details
@@ -173,15 +200,16 @@ class Database:
         """
         # Ma'lumotlar bazasiga yangilanish uchun kerakli ma'lumotlarni yuborish
         await self.execute(sql, (name_uz, name_uz, name_ru, chief_name, phone, address_id, location_id, None, None,
-                                 'all_days', 'N/A', 'N/A', 'N/A', datetime.now(), branch_id))
+                                 'all_days', 'N/A', 'N/A', 'N/A', datetime.now(tz=tashkent_tz), branch_id))
 
     async def deactivate_eco_branch(self, branch_id):
         sql = "UPDATE eco_branches SET is_active = FALSE WHERE id = %s"
         await self.execute(sql, (branch_id,))
 
     async def activate_eco_branch(self, branch_id):
-        sql = "UPDATE eco_branches SET is_active = TRUE WHERE id = %s"
-        await self.execute(sql, (branch_id,))
+        sql = "UPDATE eco_branches SET is_active = TRUE, updated_at = %s, activity_time = %s WHERE id = %s"
+        next_month = datetime.now(tz=tashkent_tz).month + 1
+        await self.execute(sql, (datetime.now(tz=tashkent_tz), datetime.now(tz=tashkent_tz).replace(month=next_month), branch_id,))
 
     async def add_location(self, location: Location):
         sql = """
@@ -240,7 +268,7 @@ class Database:
         VALUES
         (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
-        await self.execute(sql, (game_name_uz, game_name_uz, game_name_ru, 'N/A', 'N/A', 'N/A', None, None, 'pending', datetime.now(), datetime.now()))
+        await self.execute(sql, (game_name_uz, game_name_uz, game_name_ru, 'N/A', 'N/A', 'N/A', None, None, 'pending', datetime.now(tz=tashkent_tz), datetime.now(tz=tashkent_tz)))
 
     async def get_game(self, id):
         sql = """
@@ -255,12 +283,12 @@ class Database:
             sql = """
             UPDATE games SET status = %s, start_date = %s WHERE id = %s
             """
-            await self.execute(sql, (status, datetime.now().date(), id))
+            await self.execute(sql, (status, datetime.now(tz=tashkent_tz).date(), id))
         elif status == 'completed':
             sql = """
             UPDATE games SET status = %s, end_date = %s WHERE id = %s
             """
-            await self.execute(sql, (status, datetime.now().date(), id))
+            await self.execute(sql, (status, datetime.now(tz=tashkent_tz).date(), id))
         else:
             sql = """
             UPDATE games SET status = %s WHERE id = %s
@@ -289,7 +317,7 @@ class Database:
         VALUES
         (%s, %s, %s, %s, %s, %s, %s)
         """
-        await self.execute(sql, (game_id, eco_branch_id, code, True, 5, datetime.now(), datetime.now()))
+        await self.execute(sql, (game_id, eco_branch_id, code, True, 5, datetime.now(tz=tashkent_tz), datetime.now(tz=tashkent_tz)))
 
     async def check_qr_code(self, code):
         sql = """
@@ -314,7 +342,7 @@ class Database:
         VALUES
         (%s, %s, %s, %s, %s, %s, %s)
         """
-        await self.execute(sql, (tg_id, language, fullname, phone, payload, datetime.now(), datetime.now()))
+        await self.execute(sql, (tg_id, language, fullname, phone, payload, datetime.now(tz=tashkent_tz), datetime.now(tz=tashkent_tz)))
 
     async def participant_set_language(self, tg_id, language: str) -> None:
         sql = "UPDATE participants SET language = %s WHERE tg_id = %s"
@@ -373,7 +401,7 @@ class Database:
         VALUES
         (%s, %s, %s, %s, %s, %s)
         """
-        await self.execute(sql, (participant_id, qrcode_id, location_id, False, datetime.now(), datetime.now()))
+        await self.execute(sql, (participant_id, qrcode_id, location_id, False, datetime.now(tz=tashkent_tz), datetime.now(tz=tashkent_tz)))
 
     async def update_active_qr_code(self, qrcode_id):
         sql = """
@@ -406,7 +434,7 @@ class Database:
             SET card_type = %s, card_number = %s, updated_at = %s
             WHERE participant_id = %s
             """
-            await self.execute(sql, (card_type, card_number, datetime.now(), tg_id))
+            await self.execute(sql, (card_type, card_number, datetime.now(tz=tashkent_tz), tg_id))
         else:
             sql = """
             INSERT INTO plastic_cards
@@ -414,7 +442,7 @@ class Database:
             VALUES
             (%s, %s, %s, %s, %s)
             """
-            await self.execute(sql, (tg_id, card_type, card_number, datetime.now(), datetime.now()))
+            await self.execute(sql, (tg_id, card_type, card_number, datetime.now(tz=tashkent_tz), datetime.now(tz=tashkent_tz)))
 
     async def get_plastic_card(self, tg_id):
         sql = """

@@ -76,19 +76,19 @@ async def add_qr_code_location(message: Message, state: FSMContext):
             'success': "✅ QR kod muvaffaqiyatli ro'yxatdan o'tkazildi!\n\n",
             'error': "❗️ Xatolik yuz berdi!\n\n",
             'distance': ("Ushbu QR kod {distance} m masofada yuborilgan. QR kodni roʻyxatdan oʻtkazish uchun uni kod "
-                         "olgan joydan 10 m masofada yuboring.\n\n")
+                         "olgan joydan 50 m masofada yuboring.\n\n")
         },
         'ru': {
             'success': "✅ QR-код успешно зарегистрирован!\n\n",
             'error': "❗️ Произошла ошибка!\n\n",
             'distance': ("Этот QR-код был отправлен на расстоянии {distance} м. Чтобы зарегистрировать QR-код, "
-                         "отправьте его на расстоянии не более 10 м от места получения кода.\n\n")
+                         "отправьте его на расстоянии не более 50 м от места получения кода.\n\n")
         }
     }
     eco_branch_dict = await db.get_eco_branch(eco_branch_id)
     distance = get_distance((location.latitude, location.longitude),
                             (eco_branch_dict['latitude'], eco_branch_dict['longitude']))
-    if distance > 10:
+    if distance > 50:
         await message.answer(TEXTS[lang]['distance'].format(distance=distance),
                              reply_markup=await participant_menu(lang))
         await state.clear()

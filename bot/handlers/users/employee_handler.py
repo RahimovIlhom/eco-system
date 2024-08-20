@@ -16,18 +16,25 @@ async def qr_code_handler(message: Message):
     TEXTS = {
         'uz': {
             "accept": "QR code chiqarish uchun konkursni tanlang:",
-            "reject": "❌ QR code chiqarish hozirda mumkin emas!"
+            "reject": "❌ QR code chiqarish hozirda mumkin emas!",
+            "timeout": "⌛️ Sizning filialingiz uchun QR code chiqarish vaqti {time} da tugagan."
         },
         'ru': {
             'accept': "Выберите конкурс для генерации QR-кода:",
-            'reject': "❌ Генерация QR кода в настоящее время невозможна!"
+            'reject': "❌ Генерация QR кода в настоящее время невозможна!",
+            "timeout": "⌛️ Время для генерации QR-кода для вашего филиала истекло в {time}."
         }
     }
     games = await db.get_active_games()
     if not games:
         await message.answer(TEXTS[lang]['reject'])
     else:
-        await message.answer(TEXTS[lang]['accept'], reply_markup=await choose_game_manu(lang))
+        employee_obj = await db.get_employee(message.from_user.id)
+        if employee_obj.get('branch_is_active', False):
+            await message.answer(TEXTS[lang]['accept'], reply_markup=await choose_game_manu(lang))
+        else:
+            await message.answer(TEXTS[lang]['timeout'].format(time=employee_obj['branch_activity_time'].strftime("%H:%M, %d-%m-%Y")),
+                                 reply_markup=ReplyKeyboardRemove())
 
 
 @dp.callback_query(EmployeeFilter(), CreateQRCodeCallbackData.filter())

@@ -128,6 +128,32 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'backend.wsgi.application'
 
+# settings.py
+
+import os
+from celery import Celery
+
+# Celery sozlamalari
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'Asia/Tashkent'
+
+# Celery ilovasini ishga tushirish
+celery_app = Celery('backend')
+celery_app.config_from_object('django.conf:settings', namespace='CELERY')
+celery_app.autodiscover_tasks()
+
+
+from celery.schedules import crontab
+
+CELERY_BEAT_SCHEDULE = {
+    'update-is-active-every-15-minutes': {
+        'task': 'eco_app.tasks.update_is_active',
+        'schedule': crontab(minute='*/30'),  # Har 15 daqiqada ishga tushadi
+    },
+}
 
 # DATABASES = {
 #     'default': {
