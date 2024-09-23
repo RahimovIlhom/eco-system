@@ -79,7 +79,7 @@ async def eco_branch_detail_func(call, branch_id, lang):
             f"📅 Рабочие дни: {eco_branch['working_days']}\n"
             f"📍 Координаты: {eco_branch['latitude']}, {eco_branch['longitude']}\n"
             f"ℹ️ Информация: {eco_branch['information']}\n"
-            f"⏳  Время активности: {eco_branch['activity_time'].strfftime('%H:%M, %d-%m-%Y, %A')}\n\n"
+            f"⏳  Время активности: {eco_branch['activity_time'].strftime('%H:%M, %d-%m-%Y, %A')}\n\n"
             f"Статус: {'🟢 Активен' if eco_branch['is_active'] else '🔴 Неактивен'}"
         )
         if employees:
@@ -103,7 +103,10 @@ async def deactivate_eco_branch_func(call, branch_id, lang):
     employees = await db.get_employees_by_eco_branch(branch_id)
     if employees:
         for emp in employees:
-            await bot.send_message(emp['chat_id'], MESSAGES[emp['lang']], reply_markup=ReplyKeyboardRemove())
+            try:
+                await bot.send_message(emp['chat_id'], MESSAGES[emp['lang']], reply_markup=ReplyKeyboardRemove())
+            except Exception:
+                pass
 
 
 async def activate_eco_branch_func(call, branch_id, lang):
@@ -117,7 +120,10 @@ async def activate_eco_branch_func(call, branch_id, lang):
     employees = await db.get_employees_by_eco_branch(branch_id)
     if employees:
         for emp in employees:
-            await bot.send_message(emp['chat_id'], MESSAGES[emp['lang']], reply_markup=await employee_menu(emp['lang']))
+            try:
+                await bot.send_message(emp['chat_id'], MESSAGES[emp['lang']], reply_markup=await employee_menu(emp['lang']))
+            except Exception:
+                pass
 
 
 async def edit_eco_branch_func(call, branch_id, lang, state: FSMContext = None):

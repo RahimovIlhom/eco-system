@@ -59,24 +59,21 @@ async def add_employee_contact(message: Message, state: FSMContext):
     lang = data['language']
     TEXTS = {
         'uz': {
-            'success': "✅ Xodim muvaffaqiyatli ro'yxatdan o'tkazildi!",
-            'failed': "❗️ Xodim ro'yxatdan o'tishda xatolik yuz berdi!",
+            'inserted': "✅ Xodim muvaffaqiyatli ro'yxatdan o'tkazildi!",
+            'updated': "✏️️ Xodim muvaffaqiyatli o'zgartirildi va shu filial uchun tegishli bo'ldi!",
             'end': "👤 Xodimlar bo'limi"
         },
         'ru': {
-            'success': "✅ Сотрудник успешно зарегистрирован!",
-            'failed': "❗️ Произошла ошибка при регистрации сотрудника!",
+            'inserted': "✅ Сотрудник успешно зарегистрирован!",
+            'updated': "✏️️ Сотрудник успешно изменен и стал соответствующим для этого филиала!",
             'end': "👤 Раздел сотрудников"
         }
     }
     await state.clear()
-    try:
-        await db.add_employee(**data)  # TODO: add_employee() -> add_employee
-    except Exception as e:
-        await message.answer(TEXTS[lang]['failed'] + f"\n\nerror: {e}", reply_markup=None)
-    else:
-        await eco_branch_detail_func(message, data.get('eco_branch_id'), lang)
-        await message.answer(TEXTS[lang]['success'], reply_markup=await employees_menu(lang))
+    resp = await db.add_employee(**data)
+
+    await eco_branch_detail_func(message, data.get('eco_branch_id'), lang)
+    await message.answer(TEXTS[lang][resp], reply_markup=await employees_menu(lang))
 
 
 @dp.message(ChatTypeFilter('private'), AdminFilter(), AddEmployeeStates.contact, lambda msg: msg.content_type == ContentType.ANY)

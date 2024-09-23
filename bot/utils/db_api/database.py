@@ -84,13 +84,25 @@ class Database:
                "WHERE employees.eco_branch_id = %s")
         return await self.execute(sql, (eco_branch_id,), fetchall=True)
 
-    async def add_employee(self, tg_id, eco_branch_id, fullname, phone, *args, **kwargs) -> None:
-        sql = ("INSERT INTO eco_branch_employees "
-               "(tg_id, language, eco_branch_id, fullname, phone, created_at, updated_at, inn) "
-               "VALUES "
-               "(%s, %s, %s, %s, %s, %s, %s, %s)")
-        await self.execute(sql, (tg_id, 'uz', eco_branch_id, fullname, phone,
-                                 datetime.now(tz=tashkent_tz), datetime.now(tz=tashkent_tz), None))
+    async def add_employee(self, tg_id, eco_branch_id, fullname, phone, language='uz', *args, **kwargs) -> str:
+        # Check if the employee already exists
+        employee = await self.get_employee(tg_id)
+
+        current_time = datetime.now(tz=tashkent_tz)
+
+        if employee:
+            # Directly update the eco_branch_id if the employee exists
+            sql = "UPDATE eco_branch_employees SET eco_branch_id = %s, fullname = %s, updated_at = %s WHERE tg_id = %s;"
+            await self.execute(sql, (eco_branch_id, fullname, current_time, tg_id))
+            return "updated"
+        else:
+            # Insert a new employee
+            sql = ("INSERT INTO eco_branch_employees "
+                   "(tg_id, language, eco_branch_id, fullname, phone, created_at, updated_at, inn) "
+                   "VALUES "
+                   "(%s, %s, %s, %s, %s, %s, %s, %s)")
+            await self.execute(sql, (tg_id, language, eco_branch_id, fullname, phone, current_time, current_time, None))
+            return "inserted"
 
     async def remove_employee(self, tg_id) -> None:
         sql = "DELETE FROM eco_branch_employees WHERE tg_id = %s"
